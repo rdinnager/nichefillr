@@ -1,0 +1,7 @@
+EIGEN_INC=
+NIMBLE_INC_DIR=C:/R/R-3.2.5/library/nimble/include
+NIMBLE_LIB_DIR=C:/R/R-3.2.5/library/nimble/CppCode
+NIMBLE_DIR=C:/R/R-3.2.5/library/nimble
+RPATH=-rpath C:/R/R-3.2.5/library/nimble/CppCode
+
+include C:/R/R-3.2.5/library/nimble/make/Makevars.win

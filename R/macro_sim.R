@@ -10,7 +10,7 @@
 #' length n_trait; This is the Brownian motion rate parameter
 #' 
 #' @return Initialized object with macroevolutionary simulation setup
-make_tree_ob <- function(b_rate = 0.001, init_traits, e_var, init_Ns, trait_hist = TRUE){
+make_tree_ob <- function(b_rate = 0.001, init_traits, e_var, init_Ns, trait_hist = TRUE, save_tree = TRUE){
   tree_ob <- list()
   start_tree <- list()
   start_tree$edge <- matrix(integer(), nrow = 0, ncol = 2)
@@ -60,6 +60,10 @@ make_tree_ob <- function(b_rate = 0.001, init_traits, e_var, init_Ns, trait_hist
   
   if(trait_hist){
     tree_ob$full_dat <- expandingList()
+  }
+  if(save_tree){
+    tree_ob$tree_list <- expandingList()
+    tree_ob$tree_times <- expandingList()
   }
   tree_ob$extant_list <- expandingList()
   

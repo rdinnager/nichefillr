@@ -78,23 +78,20 @@
 #' @import progress
 #' 
 #' @export
-sim_radiation <- function(parms) {
+sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01) {
   
   params <- list(K_parms = parms$K_parms, a_parms = parms$a_parms, b_rate = parms$macro_parms$b_rate, 
                  init_traits = parms$macro_parms$init_traits, e_var = parms$macro_parms$e_var, 
                  init_Ns = parms$macro_parms$init_Ns, init_br = parms$macro_parms$init_br, 
                  check_extinct = parms$macro_parms$check_extinct, tot_time = parms$macro_parms$tot_time, 
                  V_gi = parms$macro_parms$V_gi, m = parms$macro_parms$m, d = parms$macro_parms$d, 
-                 save_tree = parms$macro_parms$save_tree, save_tree_interval = parms$macro_parms$save_tree_interval, 
-                 progress = parms$macro_parms$progress, mult = parms$macro_parms$mult,
-                 trait_hist = parms$macro_parms$trait_hist, trait_hist_prop = parms$macro_parms$trait_hist_prop)
-  
-  tree_list <- list()
-  save_tree_times <- vector("numeric", length = 1000000)
+                 save_tree = save_tree, progress = progress, mult = parms$macro_parms$mult,
+                 trait_hist = trait_hist, trait_hist_prop = trait_hist_prop)
   
   tree_ob <- make_tree_ob(b_rate = params$b_rate, params$init_traits, 
                           params$e_var, init_Ns = params$init_Ns, 
-                          trait_hist = params$trait_hist)  
+                          trait_hist = params$trait_hist,
+                          save_tree = params$save_tree)  
   tree_ob <- update_br_lens(tree_ob, params$init_br)
   
   ode_parms <- list(d = params$d, m = params$m, u = length(params$K_parms$hz), 
@@ -108,11 +105,11 @@ sim_radiation <- function(parms) {
   
   event_vec <- c(birth = tree_ob$b_rate, check_extinct = params$check_extinct)  
   t <- tree_ob$n_tips_hist[,1][nrow(tree_ob$n_tips_hist)]
-  tree_i <- 1L
+  
   i <- 1L
   current_event_vec <- event_vec
   last_print <- 0
-  last_tree_save <- 0
+  
   #Ns <- c(0.05, 0.05)
   ## Main Simulation Loop
   
@@ -155,10 +152,14 @@ sim_radiation <- function(parms) {
           n_sample_rows <- ceiling(nrow(next_ode) * params$trait_hist_prop)
           sample_rows <- seq(1, nrow(next_ode), by = floor(nrow(next_ode) / n_sample_rows))
           next_ode <- next_ode[sample_rows, ]
-        }
+        } 
         tree_ob$full_dat$add(next_ode)
       }
       tree_ob$extant_list$add(which(tree_ob$extant))
+      if(params$save_tree) {
+        tree_ob$tree_list$add(tree_ob$phylo)
+        tree_ob$tree_times$add(t)
+      }
       
       #print(tree_ob)
       
@@ -187,22 +188,14 @@ sim_radiation <- function(parms) {
         pr$tick(t - last_print, tokens = list(sr = sum(tree_ob$extant)))
         last_print <- t
       }
-      
-      if (params$save_tree) {
-        if((t - last_tree_save) > params$save_tree_interval) {
-          tree_list[[tree_i]] <- tree_ob$phylo
-          save_tree_times[tree_i] <- t
-          tree_i <- tree_i + 1L
-          last_tree_save <- t
-        }
-      }
     }
   }
   pr$tick(t - last_print, tokens = list(sr = sum(tree_ob$extant)))
   
   tree_ob$full_dat <- tree_ob$full_dat$as.list()
   tree_ob$extant_list <- tree_ob$extant_list$as.list()
-  list(sim_object = tree_ob, saved_trees = list(tree_times = save_tree_times, trees = tree_list), params = parms)
+  tree_ob$tree_list <- tree_ob$tree_list$as.list()
+  list(sim_object = tree_ob, params = parms)
 }
 
 #' Continue Niche Filling Simulation Function

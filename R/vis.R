@@ -49,9 +49,13 @@ make_df_from_sim <- function(sim_ob) {
 #' @param sim_ob nichefillr_sim object containing the results of a simulation.
 #' @param file_name (optional) Path to to save the animation to. If NULL, and
 #' view = TRUE, animation will be output to the rstudio viewer.
-#' @param 
+#' @param expand_factor Factor by which to expand x and y axes beyond the minimum and
+#' maximum found in the simulated species (allows more of the fitness landscape context to ve
+#' shown)
+#' @param contour_res Resolution for the fitness contours, in terms of how many points per
+#' axis to calculate fitness for.
 #' @importFrom magick image_graph
-sim_animation <- function(sim_ob, file_name = NULL, expand_factor = 0.1, res = 25) {
+sim_animation <- function(sim_ob, file_name = NULL, expand_factor = 0.1, contour_res = 25, height = 300, width = 400, res = 72) {
   plot_df <- make_df_from_sim(sim_ob)
   
   x_lims <- c(min(plot_df$Niche_Axis_1), max(plot_df$Niche_Axis_1))
@@ -65,8 +69,8 @@ sim_animation <- function(sim_ob, file_name = NULL, expand_factor = 0.1, res = 2
   
   pop_lims <- c(min(plot_df$Population), max(plot_df$Population))
   
-  contour_df <- crossing(Niche_Axis_1 = seq(x_lims[1], x_lims[2], length.out = res),
-                         Niche_Axis_2 = seq(y_lims[1], y_lims[2], length.out = res)) 
+  contour_df <- crossing(Niche_Axis_1 = seq(x_lims[1], x_lims[2], length.out = contour_res),
+                         Niche_Axis_2 = seq(y_lims[1], y_lims[2], length.out = contour_res)) 
   z <- apply(contour_df %>% as.matrix, 1, 
                      function(x) K_func(x, h0 = sim_ob$params$K_parms$h0, 
                                         sig0i = sim_ob$params$K_parms$sigma0i, 
@@ -94,7 +98,7 @@ sim_animation <- function(sim_ob, file_name = NULL, expand_factor = 0.1, res = 2
     return(NULL)
   }
   
-  anim <- image_graph(width = 300, height = 300, res = 72)
+  anim <- image_graph(width = width, height = height, res = 72)
   plot_df %>%
     group_by(Time) %>%
     do(draw_single_plot(., y_lims = y_lims, x_lims = x_lims, pop_lims = pop_lims))
@@ -109,5 +113,7 @@ sim_animation <- function(sim_ob, file_name = NULL, expand_factor = 0.1, res = 2
   if(!is.null(file_name)) {
     image_write(animation, file_name)
   }
+  
+  return(animation)
   
 }

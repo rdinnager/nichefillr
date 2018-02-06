@@ -6,3 +6,5 @@ testing has not been exhaustive. I will add a description and some example of us
 In the mean-time, here is an example of what the simulation can do. It shows a set of species evolving according to a fitness landscape (denoted by grey contour lines), with competition amongst them (proportional to their closeness in niche space). The simulation can have quite complicated fitness landscapes and also allows for flexibility in the competition kernel. New species bud off from existing species according to a random birth process.
 
 ![animated gif of simulation](tester.gif)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1166254.svg)](https://doi.org/10.5281/zenodo.1166254)

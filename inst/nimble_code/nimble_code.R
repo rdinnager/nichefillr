@@ -13,7 +13,8 @@ adapt_landscape_comp_dyn <- nimbleFunction(
                  D_i = double(1),
                  b_iz = double(2),
                  state = double(1), V_gi = double(1),
-                 sigma_iz = double(2), gamma_i = double(1)) {
+                 sigma_iz = double(2), gamma_i = double(1),
+                 c_r = double(1), C = double(0)) {
     
     new_state <- numeric(length = length(state), value = 0, init = TRUE)
     N <- state[(d*m+1):(d*m+m)]
@@ -65,7 +66,7 @@ adapt_landscape_comp_dyn <- nimbleFunction(
         a_sum_rz[r, z] <- exp(-beta_2_rz[r, z])*h_z[z]
       }
       #beta_r[r] <- sum(exp(-beta_2_rz[r, ])*h_z[r])
-      a_sum_r[r] <- sum(a_sum_rz[r, ]) + a
+      a_sum_r[r] <- sum(a_sum_rz[r, ]) + a + c_r[r]
     }
     #print("done_2")
     # Do r by i by z values
@@ -90,7 +91,7 @@ adapt_landscape_comp_dyn <- nimbleFunction(
           beta_4_rsi[r, s, i] <- p3 
         }
         beta_3_rs[r, s] <- sum(beta_3_rsi[r, s, ]) ## sum across d
-        new_N_part[r, s] <- N[s]*exp(-beta_3_rs[r, s]) ## for population dynamics
+        new_N_part[r, s] <- N[s]*C*exp(-beta_3_rs[r, s]) ## for population dynamics
       }
     }
     
@@ -100,11 +101,11 @@ adapt_landscape_comp_dyn <- nimbleFunction(
         for(i in 1:d){
           #alpha_num_1_rsi[r, s, i] <- (beta_4_rsi[r, s, i]*D_i[i]*exp(beta_1_r[r] - beta_3_rs[r, s])*(((beta_4_rsi[r, s, i]^2)/(2*gamma_i[i]^2))^(D_i[i] - 1))) / (h0*a_sum_r[r])
           if(r != s) {
-            alpha_num_1_rsi[r, s, i] <- (beta_4_rsi[r, s, i]*D_i[i]*exp(beta_1_r[r] - beta_3_rs[r, s])*(((beta_4_rsi[r, s, i]^2)/(2*gamma_i[i]^2))^(D_i[i] - 1))) / (h0*a_sum_r[r])
+            alpha_num_1_rsi[r, s, i] <- (beta_4_rsi[r, s, i]*C*D_i[i]*exp(beta_1_r[r] - beta_3_rs[r, s])*(((beta_4_rsi[r, s, i]^2)/(2*gamma_i[i]^2))^(D_i[i] - 1))) / (h0*a_sum_r[r])
           } else {
             alpha_num_1_rsi[r, s, i] <- 0
           }
-          beta_full_ris[r, i, s] <- N[s]*(((exp(2*beta_1_r[r] - beta_3_rs[r, s])*(h0*(exp(-beta_1_r[r]))*(K_num_1_ri[r, i]) - K_num_2_ri[r, i])) / ((h0*a_sum_r[r])^2)) - alpha_num_1_rsi[r, s, i])
+          beta_full_ris[r, i, s] <- N[s]*(((C*exp(2*beta_1_r[r] - beta_3_rs[r, s])*(h0*(exp(-beta_1_r[r]))*(K_num_1_ri[r, i]) - K_num_2_ri[r, i])) / ((h0*a_sum_r[r])^2)) - alpha_num_1_rsi[r, s, i])
         }
       }
     }

@@ -30,16 +30,22 @@
 #' capacity drops off near the landscape borders in each dimension. Higher values give more extreme drop-offs;
 #' vector of length d}
 #' \item{\code{a}}{: Minimum values of carrying capacity within landscape limits}
+#' \item{\code{c_var}}{: Variance of the deviations added to each species carrying capacity.
+#' If this is zero, no deviations are added. The purpose of this is to ensure no two species occupying
+#' the same niche position can have exact fitness equivalence, which can lead to infinite coexistence.
+#' New deviates are drawn after every simulation event, to simulate demographic stochasticity.}
 #' }
 #' @section \code{a_parms}:
 #' \itemize{
-#' \item{\code{gamma_i}}{: Strength of competition; determines how quickly the competition
+#' \item{\code{gamma_i}}{: Strength of competition - influence; determines how quickly the competition
 #' strength between two species drops off with increasing distance between their niche
 #' trait values; vector of length d, where d is the number of niche dimensions}
 #' \item{\code{D_i}}{: Super-gaussiain parameter for competition; this parameter controls
 #' how the precipitously the competition strength drops off with increasing niche distance.
 #' Higher values lead to a more cliff-like competition kernel, with strong competition
 #' between highly similar species, then very little competition beyond some threshold}
+#' #' \item{\code{C}}{: Strength of competition - max competition; determines the maximum
+#' competition between two species as a proportion of competition within species (which is always 1)}
 #' }
 #' @section \code{macro_parms}:
 #' \itemize{
@@ -61,15 +67,18 @@
 #' #' \item{\code{mult}}{: Multiplier that determines how much traits 'jump' in trait space
 #' after a speciation event. This is a multiple of \code{e_var}, and is the standard deviation
 #' of a normal deviate that is added to all traits.}
-#' \item{\code{save_tree}}{: A logical determining whether the simulation should save
-#' intermediate states of the phylogeny during the simulation run}
-#' \item{\code{save_tree_interval}}{: How often to save intermediate phylogenies if
-#' \code{save_tree} = TRUE; phylogenies are saved every \code{save_tree_interval} time steps}
-#' \item{\code{progress}}{: Print progress bar if TRUE.}
-#' #' \item{\code{trait_hist}}{: A logical determining whether the simulation should save
-#' all trait evolution histories. Set to FALSE if you are only interested in the end state of
-#' the simulation in order to save memory.}
 #' }
+#' @param save_tree A logical determining whether the simulation should save
+#' intermediate states of the phylogeny during the simulation run
+#' @param progress Print progress bar if TRUE.
+#' @param trait_hist A logical determining whether the simulation should save
+#' all trait evolution histories. Set to FALSE if you are only interested in the end state of
+#' the simulation in order to save memory.
+#' @param trait_hist_prop If \code{trait_hist} is TRUE, what proportion of data should be kept?
+#' For example setting this parameter to 0.5 would tell the simulation to store 50\% of the
+#' generations in the full simulation. I recommend setting this low to save storage space, and
+#' because it is often possible to get a very good animation with only a small proportion
+#' of the full simulation (default is 0.01 and this is usually plenty).
 #' 
 #' @return A niche_fill_sim object containing the final simulation object,
 #' a set of intermediate phylogenies, and the parameters used to run the simulation
@@ -84,7 +93,8 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
                  init_traits = parms$macro_parms$init_traits, e_var = parms$macro_parms$e_var, 
                  init_Ns = parms$macro_parms$init_Ns, init_br = parms$macro_parms$init_br, 
                  check_extinct = parms$macro_parms$check_extinct, tot_time = parms$macro_parms$tot_time, 
-                 V_gi = parms$macro_parms$V_gi, m = parms$macro_parms$m, d = parms$macro_parms$d, 
+                 V_gi = parms$macro_parms$V_gi, c_var = parms$K_parms$c_var, C = parms$a_parms$C,
+                 m = parms$macro_parms$m, d = parms$macro_parms$d, 
                  save_tree = save_tree, progress = progress, mult = parms$macro_parms$mult,
                  trait_hist = trait_hist, trait_hist_prop = trait_hist_prop)
   
@@ -101,7 +111,8 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
                     P_iz = params$K_parms$Piz, D_i = params$a_parms$D_i,
                     b_iz = params$K_parms$biz, 
                     V_gi = params$V_gi,
-                    sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i)
+                    sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i,
+                    C = params$C)
   
   event_vec <- c(birth = tree_ob$b_rate, check_extinct = params$check_extinct)  
   t <- tree_ob$n_tips_hist[,1][nrow(tree_ob$n_tips_hist)]
@@ -130,6 +141,10 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
     
     if(floor(next_event) > 1) {
       ode_parms$m <- sum(tree_ob$extant)
+      
+      ## carrying capacity deviates for each species
+      ode_parms$c_r <- rnorm(ode_parms$m, 0, params$c_var) 
+      
       ode_init <- c(as.vector(tree_ob$traits[ , tree_ob$extant]), tree_ob$Ns[tree_ob$extant])
       #test_fun <- adapt_landscape_comp_dyn_de(1, ode_init, ode_parms)
       #test_fun

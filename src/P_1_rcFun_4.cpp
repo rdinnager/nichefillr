@@ -10,7 +10,7 @@
 #include "P_1_rcFun_4.h"
 #undef eval
 
-NimArr<1, double>  rcFun_4 ( int ARG1_d_, int ARG2_m_, int ARG3_u_, double ARG4_a_, double ARG5_h0_, NimArr<1, double> & ARG6_h_z_, NimArr<1, double> & ARG7_P0_i_, NimArr<1, double> & ARG8_sigma0_i_, NimArr<2, double> & ARG9_P_iz_, NimArr<1, double> & ARG10_D_i_, NimArr<2, double> & ARG11_b_iz_, NimArr<1, double> & ARG12_state_, NimArr<1, double> & ARG13_V_gi_, NimArr<2, double> & ARG14_sigma_iz_, NimArr<1, double> & ARG15_gamma_i_ )  {
+NimArr<1, double>  rcFun_4 ( int ARG1_d_, int ARG2_m_, int ARG3_u_, double ARG4_a_, double ARG5_h0_, NimArr<1, double> & ARG6_h_z_, NimArr<1, double> & ARG7_P0_i_, NimArr<1, double> & ARG8_sigma0_i_, NimArr<2, double> & ARG9_P_iz_, NimArr<1, double> & ARG10_D_i_, NimArr<2, double> & ARG11_b_iz_, NimArr<1, double> & ARG12_state_, NimArr<1, double> & ARG13_V_gi_, NimArr<2, double> & ARG14_sigma_iz_, NimArr<1, double> & ARG15_gamma_i_, NimArr<1, double> & ARG16_c_r_, double ARG17_C_ )  {
 NimArr<1, double> new_state;
 double Interm_1;
 int Interm_2;
@@ -107,7 +107,7 @@ for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
  Interm_5 = a_sum_rz.dim()[1];
  new (&Eig_a_sum_rz) Map< MatrixXd >(a_sum_rz.getPtr(),a_sum_rz.dim()[0],a_sum_rz.dim()[1]);
  Interm_6 = (((Eig_a_sum_rz).block(r - 1, 0, 1, a_sum_rz.dim()[1])).transpose()).sum();
- a_sum_r[(r) - 1] = Interm_6 + ARG4_a_;
+ a_sum_r[(r) - 1] = (Interm_6 + ARG4_a_) + ARG16_c_r_[(r) - 1];
 }
 for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
  for(i=1; i<= static_cast<int>(ARG1_d_); ++i) {
@@ -130,18 +130,18 @@ for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
   Interm_8 = beta_3_rsi.dim()[2];
   new (&Eig_beta_3_rsiInterm_16) EigenMapStrd(beta_3_rsi.getPtr() + static_cast<int>(static_cast<int>((r - 1) * beta_3_rsi.strides()[0] + (s - 1) * beta_3_rsi.strides()[1])),beta_3_rsi.dim()[2],1,EigStrDyn(0, beta_3_rsi.strides()[2]));
   beta_3_rs((r) - 1, (s) - 1) = (Eig_beta_3_rsiInterm_16).sum();
-  new_N_part((r) - 1, (s) - 1) = N[(s) - 1] * exp(-(beta_3_rs((r) - 1, (s) - 1)));
+  new_N_part((r) - 1, (s) - 1) = (N[(s) - 1] * ARG17_C_) * exp(-(beta_3_rs((r) - 1, (s) - 1)));
  }
 }
 for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
  for(s=1; s<= static_cast<int>(ARG2_m_); ++s) {
   for(i=1; i<= static_cast<int>(ARG1_d_); ++i) {
    if(r != s) {
-    alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1) = (((beta_4_rsi((r) - 1, (s) - 1, (i) - 1) * ARG10_D_i_[(i) - 1]) * exp(beta_1_r[(r) - 1] - beta_3_rs((r) - 1, (s) - 1))) * (pow( static_cast<double>(((pow( static_cast<double>(beta_4_rsi((r) - 1, (s) - 1, (i) - 1)),2)) / static_cast<double>((2 * pow( static_cast<double>(ARG15_gamma_i_[(i) - 1]),2))))),(ARG10_D_i_[(i) - 1] - 1)))) / static_cast<double>((ARG5_h0_ * a_sum_r[(r) - 1]));
+    alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1) = ((((beta_4_rsi((r) - 1, (s) - 1, (i) - 1) * ARG17_C_) * ARG10_D_i_[(i) - 1]) * exp(beta_1_r[(r) - 1] - beta_3_rs((r) - 1, (s) - 1))) * (pow( static_cast<double>(((pow( static_cast<double>(beta_4_rsi((r) - 1, (s) - 1, (i) - 1)),2)) / static_cast<double>((2 * pow( static_cast<double>(ARG15_gamma_i_[(i) - 1]),2))))),(ARG10_D_i_[(i) - 1] - 1)))) / static_cast<double>((ARG5_h0_ * a_sum_r[(r) - 1]));
    } else {
     alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1) = 0;
    }
-   beta_full_ris((r) - 1, (i) - 1, (s) - 1) = N[(s) - 1] * (((exp(2 * beta_1_r[(r) - 1] - beta_3_rs((r) - 1, (s) - 1)) * ((ARG5_h0_ * (exp(-(beta_1_r[(r) - 1])))) * (K_num_1_ri((r) - 1, (i) - 1)) - K_num_2_ri((r) - 1, (i) - 1))) / static_cast<double>((pow( static_cast<double>((ARG5_h0_ * a_sum_r[(r) - 1])),2)))) - alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1));
+   beta_full_ris((r) - 1, (i) - 1, (s) - 1) = N[(s) - 1] * ((((ARG17_C_ * exp(2 * beta_1_r[(r) - 1] - beta_3_rs((r) - 1, (s) - 1))) * ((ARG5_h0_ * (exp(-(beta_1_r[(r) - 1])))) * (K_num_1_ri((r) - 1, (i) - 1)) - K_num_2_ri((r) - 1, (i) - 1))) / static_cast<double>((pow( static_cast<double>((ARG5_h0_ * a_sum_r[(r) - 1])),2)))) - alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1));
   }
  }
 }
@@ -160,7 +160,7 @@ for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
 return(new_state);
 }
 
-SEXP  CALL_rcFun_4 ( SEXP S_ARG1_d_, SEXP S_ARG2_m_, SEXP S_ARG3_u_, SEXP S_ARG4_a_, SEXP S_ARG5_h0_, SEXP S_ARG6_h_z_, SEXP S_ARG7_P0_i_, SEXP S_ARG8_sigma0_i_, SEXP S_ARG9_P_iz_, SEXP S_ARG10_D_i_, SEXP S_ARG11_b_iz_, SEXP S_ARG12_state_, SEXP S_ARG13_V_gi_, SEXP S_ARG14_sigma_iz_, SEXP S_ARG15_gamma_i_ )  {
+SEXP  CALL_rcFun_4 ( SEXP S_ARG1_d_, SEXP S_ARG2_m_, SEXP S_ARG3_u_, SEXP S_ARG4_a_, SEXP S_ARG5_h0_, SEXP S_ARG6_h_z_, SEXP S_ARG7_P0_i_, SEXP S_ARG8_sigma0_i_, SEXP S_ARG9_P_iz_, SEXP S_ARG10_D_i_, SEXP S_ARG11_b_iz_, SEXP S_ARG12_state_, SEXP S_ARG13_V_gi_, SEXP S_ARG14_sigma_iz_, SEXP S_ARG15_gamma_i_, SEXP S_ARG16_c_r_, SEXP S_ARG17_C_ )  {
 int ARG1_d_;
 int ARG2_m_;
 int ARG3_u_;
@@ -176,6 +176,8 @@ NimArr<1, double> ARG12_state_;
 NimArr<1, double> ARG13_V_gi_;
 NimArr<2, double> ARG14_sigma_iz_;
 NimArr<1, double> ARG15_gamma_i_;
+NimArr<1, double> ARG16_c_r_;
+double ARG17_C_;
 SEXP S_returnValue_1234;
 NimArr<1, double> LHSvar_1234;
 SEXP S_returnValue_LIST_1234;
@@ -194,10 +196,12 @@ SEXP_2_NimArr<1>(S_ARG12_state_, ARG12_state_);
 SEXP_2_NimArr<1>(S_ARG13_V_gi_, ARG13_V_gi_);
 SEXP_2_NimArr<2>(S_ARG14_sigma_iz_, ARG14_sigma_iz_);
 SEXP_2_NimArr<1>(S_ARG15_gamma_i_, ARG15_gamma_i_);
+SEXP_2_NimArr<1>(S_ARG16_c_r_, ARG16_c_r_);
+ARG17_C_ = SEXP_2_double(S_ARG17_C_);
 GetRNGstate();
-LHSvar_1234 = rcFun_4(ARG1_d_, ARG2_m_, ARG3_u_, ARG4_a_, ARG5_h0_, ARG6_h_z_, ARG7_P0_i_, ARG8_sigma0_i_, ARG9_P_iz_, ARG10_D_i_, ARG11_b_iz_, ARG12_state_, ARG13_V_gi_, ARG14_sigma_iz_, ARG15_gamma_i_);
+LHSvar_1234 = rcFun_4(ARG1_d_, ARG2_m_, ARG3_u_, ARG4_a_, ARG5_h0_, ARG6_h_z_, ARG7_P0_i_, ARG8_sigma0_i_, ARG9_P_iz_, ARG10_D_i_, ARG11_b_iz_, ARG12_state_, ARG13_V_gi_, ARG14_sigma_iz_, ARG15_gamma_i_, ARG16_c_r_, ARG17_C_);
 PutRNGstate();
-PROTECT(S_returnValue_LIST_1234 = allocVector(VECSXP, 16));
+PROTECT(S_returnValue_LIST_1234 = allocVector(VECSXP, 18));
 PROTECT(S_returnValue_1234 = NimArr_2_SEXP<1>(LHSvar_1234));
 PROTECT(S_ARG1_d_ = int_2_SEXP(ARG1_d_));
 PROTECT(S_ARG2_m_ = int_2_SEXP(ARG2_m_));
@@ -214,6 +218,8 @@ PROTECT(S_ARG12_state_ = NimArr_2_SEXP<1>(ARG12_state_));
 PROTECT(S_ARG13_V_gi_ = NimArr_2_SEXP<1>(ARG13_V_gi_));
 PROTECT(S_ARG14_sigma_iz_ = NimArr_2_SEXP<2>(ARG14_sigma_iz_));
 PROTECT(S_ARG15_gamma_i_ = NimArr_2_SEXP<1>(ARG15_gamma_i_));
+PROTECT(S_ARG16_c_r_ = NimArr_2_SEXP<1>(ARG16_c_r_));
+PROTECT(S_ARG17_C_ = double_2_SEXP(ARG17_C_));
 SET_VECTOR_ELT(S_returnValue_LIST_1234, 0, S_ARG1_d_);
 SET_VECTOR_ELT(S_returnValue_LIST_1234, 1, S_ARG2_m_);
 SET_VECTOR_ELT(S_returnValue_LIST_1234, 2, S_ARG3_u_);
@@ -229,8 +235,10 @@ SET_VECTOR_ELT(S_returnValue_LIST_1234, 11, S_ARG12_state_);
 SET_VECTOR_ELT(S_returnValue_LIST_1234, 12, S_ARG13_V_gi_);
 SET_VECTOR_ELT(S_returnValue_LIST_1234, 13, S_ARG14_sigma_iz_);
 SET_VECTOR_ELT(S_returnValue_LIST_1234, 14, S_ARG15_gamma_i_);
-SET_VECTOR_ELT(S_returnValue_LIST_1234, 15, S_returnValue_1234);
-UNPROTECT(17);
+SET_VECTOR_ELT(S_returnValue_LIST_1234, 15, S_ARG16_c_r_);
+SET_VECTOR_ELT(S_returnValue_LIST_1234, 16, S_ARG17_C_);
+SET_VECTOR_ELT(S_returnValue_LIST_1234, 17, S_returnValue_1234);
+UNPROTECT(19);
 return(S_returnValue_LIST_1234);
 }
 #endif

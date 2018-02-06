@@ -4,7 +4,8 @@
 \alias{sim_radiation}
 \title{Main Niche Filling Simulation Function}
 \usage{
-sim_radiation(parms)
+sim_radiation(parms, save_tree = TRUE, progress = TRUE, trait_hist = TRUE,
+  trait_hist_prop = 0.01)
 }
 \arguments{
 \item{parms}{A named list containing three named list elements:
@@ -15,6 +16,21 @@ sim_radiation(parms)
 }
 
 See Parameter List section for details on what parameters are in which lists.}
+
+\item{save_tree}{A logical determining whether the simulation should save
+intermediate states of the phylogeny during the simulation run}
+
+\item{progress}{Print progress bar if TRUE.}
+
+\item{trait_hist}{A logical determining whether the simulation should save
+all trait evolution histories. Set to FALSE if you are only interested in the end state of
+the simulation in order to save memory.}
+
+\item{trait_hist_prop}{If \code{trait_hist} is TRUE, what proportion of data should be kept?
+For example setting this parameter to 0.5 would tell the simulation to store 50\% of the
+generations in the full simulation. I recommend setting this low to save storage space, and
+because it is often possible to get a very good animation with only a small proportion
+of the full simulation (default is 0.01 and this is usually plenty).}
 }
 \value{
 A niche_fill_sim object containing the final simulation object,
@@ -83,14 +99,6 @@ so that evolution proceeds much slower than population dynamics; vector of lengt
 #' \item{\code{mult}}{: Multiplier that determines how much traits 'jump' in trait space
 after a speciation event. This is a multiple of \code{e_var}, and is the standard deviation
 of a normal deviate that is added to all traits.}
-\item{\code{save_tree}}{: A logical determining whether the simulation should save
-intermediate states of the phylogeny during the simulation run}
-\item{\code{save_tree_interval}}{: How often to save intermediate phylogenies if
-\code{save_tree} = TRUE; phylogenies are saved every \code{save_tree_interval} time steps}
-\item{\code{progress}}{: Print progress bar if TRUE.}
-#' \item{\code{trait_hist}}{: A logical determining whether the simulation should save
-all trait evolution histories. Set to FALSE if you are only interested in the end state of
-the simulation in order to save memory.}
 }
 }
 

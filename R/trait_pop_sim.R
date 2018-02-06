@@ -18,7 +18,8 @@ trait_pop_sim_de <- function(t, y, parms) {
                                     P_iz = parms$P_iz, D_i = parms$D_i,
                                     b_iz = parms$b_iz, state = y, 
                                     V_gi = parms$V_gi,
-                                    sigma_iz = parms$sigma_iz, gamma_i = parms$gamma_i))
+                                    sigma_iz = parms$sigma_iz, gamma_i = parms$gamma_i,
+                                    c_r = parms$c_r, C = parms$C))
 }
 
 #' Carrying Capacity Landscape Function (R version)

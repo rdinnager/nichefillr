@@ -1,7 +1,7 @@
 #' Function to extract trait history from simulation object as a data_frame
 #' @param sim_ob nichefillr_sim object containing the results of a simulation.
 #' @import dplyr
-#' @importFrom tidyr spread, gather, separate
+#' @import tidyr
 make_df_from_sim <- function(sim_ob) {
   ms <- sapply(sim_ob$sim_object$extant_list[!sapply(sim_ob$sim_object$extant_list, is.null)], length)
   d <- length(sim_ob$params$K_parms$sig0i)
@@ -54,8 +54,12 @@ make_df_from_sim <- function(sim_ob) {
 #' shown)
 #' @param contour_res Resolution for the fitness contours, in terms of how many points per
 #' axis to calculate fitness for.
-#' @importFrom magick image_graph
-sim_animation <- function(sim_ob, file_name = NULL, expand_factor = 0.1, contour_res = 25, height = 300, width = 400, res = 72) {
+#' @import magick 
+#' @import tidyr 
+#' @import ggplot2
+#' @export sim_animation
+sim_animation <- function(sim_ob, file_name = NULL, view = FALSE, expand_factor = 0.1, contour_res = 25, height = 300, width = 400, res = 72) {
+  message("Extracting trait history data from simulation (this might take awhile).... ")
   plot_df <- make_df_from_sim(sim_ob)
   
   x_lims <- c(min(plot_df$Niche_Axis_1), max(plot_df$Niche_Axis_1))
@@ -98,19 +102,24 @@ sim_animation <- function(sim_ob, file_name = NULL, expand_factor = 0.1, contour
     return(NULL)
   }
   
+  message("Drawing animation frames....")
+  
   anim <- image_graph(width = width, height = height, res = 72)
   plot_df %>%
     group_by(Time) %>%
-    do(draw_single_plot(., y_lims = y_lims, x_lims = x_lims, pop_lims = pop_lims))
+    do(null = draw_single_plot(., y_lims = y_lims, x_lims = x_lims, pop_lims = pop_lims))
   dev.off()
   
+  message("\nConverting to animation....")
   animation <- image_animate(anim, fps = 20)
   
   if(view) {
+    message("Sending animation to viewer....")
     print(animation)
   }
   
   if(!is.null(file_name)) {
+    message("Writing animated gif to disk....")
     image_write(animation, file_name)
   }
   

@@ -104,6 +104,19 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
                           save_tree = params$save_tree)  
   tree_ob <- update_br_lens(tree_ob, params$init_br)
   
+  t <- 0
+  result <- list(sim_object = sim_radiation_single(t, params, tree_ob, save_tree = save_tree, progress = progress,
+                                 trait_hist = trait_hist, trait_hist_prop = trait_hist_prop),
+                 sim_params = parms, other_params = list(save_tree = save_tree, 
+                                                         progress = progress,
+                                                         trait_hist = trait_hist, 
+                                                         trait_hist_prop = trait_hist_prop))
+  
+  return(result)
+  
+}
+
+sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01, arrest_speciation = FALSE) {
   ode_parms <- list(d = params$d, m = params$m, u = length(params$K_parms$hz), 
                     a = params$K_parms$a, h0 = params$K_parms$h0,
                     h_z = params$K_parms$hz,
@@ -115,7 +128,7 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
                     C = params$C)
   
   event_vec <- c(birth = tree_ob$b_rate, check_extinct = params$check_extinct)  
-  t <- tree_ob$n_tips_hist[,1][nrow(tree_ob$n_tips_hist)]
+  #t <- tree_ob$n_tips_hist[,1][nrow(tree_ob$n_tips_hist)]
   
   i <- 1L
   current_event_vec <- event_vec
@@ -179,149 +192,6 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
       #print(tree_ob)
       
       ## birth events --------------------------------------
-      if(next_event_type == "birth"){
-        #tree_ob <- update_tree_ob_remove_zero_radius(tree_ob, radius_cutoff)
-        if(any(tree_ob$Ns < 0.0001 & tree_ob$extant)) {
-          extinct <- which(tree_ob$Ns < 0.0001 & tree_ob$extant)
-          tree_ob <- update_tree_ob_extinction(tree_ob, extinct)
-        }
-        split_tip <- sample(tree_ob$tips[tree_ob$extant], 1)
-        tree_ob <- update_tree_ob_speciate(tree_ob, split_tip, mult = params$mult)
-      }
-      
-      if(next_event_type == "check_extinct") {
-        if(any(tree_ob$Ns < 0.001 & tree_ob$extant)) {
-          extinct <- which(tree_ob$Ns < 0.001 & tree_ob$extant)
-          tree_ob <- update_tree_ob_extinction(tree_ob, extinct)
-        }
-      }
-      
-      t <- t + next_event
-      tree_ob$n_tips_hist <- rbind(tree_ob$n_tips_hist, c(t, sum(tree_ob$extant)))
-      
-      if((t - last_print) > print_interval) {
-        pr$tick(t - last_print, tokens = list(sr = sum(tree_ob$extant)))
-        last_print <- t
-      }
-    }
-  }
-  pr$tick(t - last_print, tokens = list(sr = sum(tree_ob$extant)))
-  
-  tree_ob$full_dat <- tree_ob$full_dat$as.list()
-  tree_ob$extant_list <- tree_ob$extant_list$as.list()
-  tree_ob$tree_list <- tree_ob$tree_list$as.list()
-  list(sim_object = tree_ob, params = parms)
-}
-
-#' Continue Niche Filling Simulation Function
-#' 
-#' Function to continue running the niche filling simulation on a simulation that has already been run,
-#' picking up where it left off.
-#' 
-#' @param sim_ob A simulation object created by a previous run of \code{\link{sim_radiation}}
-#' @param time_steps Number of additional time steps to run the simulation.
-#' @param arrest_speciation Logical. TRUE if the speciation part of the simulation should be 
-#' arrested. This is usually done to allow the simulation to come to some equilibrium state.
-#' 
-#' @return A niche_fill_sim object containing the final simulation object,
-#' a set of intermediate phylogenies, and the parameters used to run the simulation
-#' 
-#' @importFrom deSolve ode
-#' @import progress
-#' 
-#' @export
-continue_sim_radiation <- function(sim_ob, time_steps = 10000, arrest_speciation = FALSE) {
-  
-  parms <- sim_ob$params
-  
-  params <- list(K_parms = parms$K_parms, a_parms = parms$a_parms, b_rate = parms$macro_parms$b_rate, 
-                 init_traits = parms$macro_parms$init_traits, e_var = parms$macro_parms$e_var, 
-                 init_Ns = parms$macro_parms$init_Ns, init_br = parms$macro_parms$init_br, 
-                 check_extinct = parms$macro_parms$check_extinct, tot_time = parms$macro_parms$tot_time, 
-                 V_gi = parms$macro_parms$V_gi, m = parms$macro_parms$m, d = parms$macro_parms$d, 
-                 save_tree = parms$macro_parms$save_tree, save_tree_interval = parms$macro_parms$save_tree_interval, 
-                 progress = parms$macro_parms$progress, mult = parms$macro_parms$mult,
-                 trait_hist = parms$macro_parms$trait_hist, trait_hist_prop = parms$macro_parms$trait_hist_prop)
-  
-  
-  tree_list <- sim_ob$saved_trees$trees
-  save_tree_times <- sim_ob$saved_trees$tree_times
-  
-  tree_ob <- sim_ob$sim_object
-  
-  if(params$trait_hist){
-    full_dat2 <- expandingList()
-  }
-  extant_list2 <- expandingList()
-  
-  ode_parms <- list(d = params$d, m = params$m, u = length(params$K_parms$hz), 
-                    a = params$K_parms$a, h0 = params$K_parms$h0,
-                    h_z = params$K_parms$hz,
-                    P0_i = params$K_parms$P0i, sigma0_i = params$K_parms$sig0i,
-                    P_iz = params$K_parms$Piz, D_i = params$a_parms$D_i,
-                    b_iz = params$K_parms$biz, 
-                    V_gi = params$V_gi,
-                    sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i)
-  
-  event_vec <- c(birth = tree_ob$b_rate, check_extinct = params$check_extinct)  
-  t <- tree_ob$n_tips_hist[,1][nrow(tree_ob$n_tips_hist)]
-  tree_i <- length(tree_list) + 1L
-  i <- 1L
-  current_event_vec <- event_vec
-  last_print <- params$tot_time
-  last_tree_save <- 0
-  #Ns <- c(0.05, 0.05)
-  ## Main Simulation Loop
-  
-  params$tot_time <- params$tot_time + time_steps
-  
-  pr <- progress_bar$new(total = ceiling(time_steps), clear = FALSE,
-                         format = "Running simulation [:bar] :percent eta: :eta; current species richness: :sr")
-  #pr_i <- 0
-  print_interval <- params$tot_time / 100
-  
-  while (t < params$tot_time & sum(tree_ob$extant) > 0) {
-    i <- i + 1L
-    # generate next event ----------------------------
-    #current_event_vec[1] <- event_vec[1]*sum(tree_ob$extant)
-    next_event <- rexp(1, sum(current_event_vec))
-    next_event_type <- sample(names(current_event_vec), 1, prob = current_event_vec/sum(current_event_vec)) 
-    
-    ## stuff to do no matter what the event is
-    ## setup adaptive dynamics -----------------------------------------------
-    
-    if(floor(next_event) > 1) {
-      ode_parms$m <- sum(tree_ob$extant)
-      ode_init <- c(as.vector(tree_ob$traits[ , tree_ob$extant]), tree_ob$Ns[tree_ob$extant])
-      #test_fun <- adapt_landscape_comp_dyn_de(1, ode_init, ode_parms)
-      #test_fun
-      
-      ## run ODE
-      #print(tree_ob$Ns)
-      
-      next_ode <- ode(ode_init, 1:floor(next_event), trait_pop_sim_de, ode_parms)
-      tree_ob <- update_br_lens(tree_ob, next_event, 0)
-      
-      #print(tree_ob$Ns)
-      
-      tree_ob$traits[ , tree_ob$extant] <- matrix(next_ode[nrow(next_ode), -c(1, (ncol(next_ode) - ode_parms$m + 1):ncol(next_ode))], nrow = ode_parms$d)
-      tree_ob$Ns[tree_ob$extant] <- next_ode[nrow(next_ode), c((ncol(next_ode) - ode_parms$m + 1):ncol(next_ode))]
-      
-      #print(tree_ob$Ns)
-      
-      if(params$trait_hist) {
-        if(params$trait_hist_prop < 1) {
-          n_sample_rows <- ceiling(nrow(next_ode) * params$trait_hist_prop)
-          sample_rows <- seq(1, nrow(next_ode), by = floor(nrow(next_ode) / n_sample_rows))
-          next_ode <- next_ode[sample_rows, ]
-        }
-        full_dat2$add(next_ode)
-      }
-      extant_list2$add(which(tree_ob$extant))
-      
-      #print(tree_ob)
-      
-      ## birth events --------------------------------------
       if(next_event_type == "birth" & !arrest_speciation){
         #tree_ob <- update_tree_ob_remove_zero_radius(tree_ob, radius_cutoff)
         if(any(tree_ob$Ns < 0.0001 & tree_ob$extant)) {
@@ -346,24 +216,63 @@ continue_sim_radiation <- function(sim_ob, time_steps = 10000, arrest_speciation
         pr$tick(t - last_print, tokens = list(sr = sum(tree_ob$extant)))
         last_print <- t
       }
-      
-      if (params$save_tree) {
-        if((t - last_tree_save) > params$save_tree_interval) {
-          tree_list[[tree_i]] <- tree_ob$phylo
-          save_tree_times[tree_i] <- t
-          tree_i <- tree_i + 1L
-          last_tree_save <- t
-        }
-      }
     }
   }
   pr$tick(t - last_print, tokens = list(sr = sum(tree_ob$extant)))
   
-  full_dat2 <- full_dat2$as.list()
-  extant_list2 <- extant_list2$as.list()
+  # tree_ob$full_dat <- tree_ob$full_dat$as.list()
+  # tree_ob$extant_list <- tree_ob$extant_list$as.list()
+  # tree_ob$tree_list <- tree_ob$tree_list$as.list()
+  tree_ob
+}
+
+#' Continue Niche Filling Simulation Function
+#' 
+#' Function to continue running the niche filling simulation on a simulation that has already been run,
+#' picking up where it left off.
+#' 
+#' @param sim_ob A simulation object created by a previous run of \code{\link{sim_radiation}}
+#' @param time_steps Number of additional time steps to run the simulation.
+#' @param arrest_speciation Logical. TRUE if the speciation part of the simulation should be 
+#' arrested. This is usually done to allow the simulation to come to some equilibrium state.
+#' 
+#' @return A niche_fill_sim object containing the final simulation object,
+#' a set of intermediate phylogenies, and the parameters used to run the simulation
+#' 
+#' @importFrom deSolve ode
+#' @import progress
+#' 
+#' @export
+continue_sim_radiation <- function(sim_ob, time_steps = 10000, arrest_speciation = FALSE) {
   
-  tree_ob$full_dat <- c(tree_ob$full_dat, full_dat2)
-  tree_ob$extant_list <- c(tree_ob$extant_list, extant_list2)
-  parms$macro_parms$tot_time <- params$tot_time
-  list(sim_object = tree_ob, saved_trees = list(tree_times = save_tree_times, trees = tree_list), params = parms)
+  parms <- sim_ob$sim_params
+  
+  params <- list(K_parms = parms$K_parms, a_parms = parms$a_parms, b_rate = parms$macro_parms$b_rate, 
+                 init_traits = parms$macro_parms$init_traits, e_var = parms$macro_parms$e_var, 
+                 init_Ns = parms$macro_parms$init_Ns, init_br = parms$macro_parms$init_br, 
+                 check_extinct = parms$macro_parms$check_extinct, tot_time = parms$macro_parms$tot_time, 
+                 V_gi = parms$macro_parms$V_gi, c_var = parms$K_parms$c_var, C = parms$a_parms$C, 
+                 m = parms$macro_parms$m, d = parms$macro_parms$d, 
+                 save_tree = sim_ob$other_params$save_tree, progress = sim_ob$other_params$progress, 
+                 mult = parms$macro_parms$mult, trait_hist = sim_ob$other_params$trait_hist, 
+                 trait_hist_prop = sim_ob$other_params$trait_hist_prop)
+  
+  
+  tree_ob <- sim_ob$sim_object
+  
+  t <- tree_ob$n_tips_hist[,1][nrow(tree_ob$n_tips_hist)]
+  
+  params$tot_time <- params$tot_time + time_steps
+  
+  result <- list(sim_object = sim_radiation_single(t, params, tree_ob, save_tree = save_tree, progress = progress,
+                                                   trait_hist = trait_hist, trait_hist_prop = trait_hist_prop,
+                                                   arrest_speciation = arrest_speciation),
+                 sim_params = parms, other_params = list(save_tree = params$save_tree, 
+                                                         progress = params$progress,
+                                                         trait_hist = params$trait_hist, 
+                                                         trait_hist_prop = params$trait_hist_prop,
+                                                         arrest_speciation = arrest_speciation))
+  
+  return(result)
+  
 }

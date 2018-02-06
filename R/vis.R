@@ -3,8 +3,13 @@
 #' @import dplyr
 #' @import tidyr
 make_df_from_sim <- function(sim_ob) {
-  ms <- sapply(sim_ob$sim_object$extant_list[!sapply(sim_ob$sim_object$extant_list, is.null)], length)
-  d <- length(sim_ob$params$K_parms$sig0i)
+  
+  full_dat <- sim_ob$sim_object$full_dat$as.list()
+  extant_list <- sim_ob$sim_object$extant_list$as.list()
+  #tree_ob$tree_list <- tree_ob$tree_list$as.list()
+  
+  ms <- sapply(extant_list[!sapply(extant_list, is.null)], length)
+  d <- length(sim_ob$sim_params$K_parms$sig0i)
   
   # trait_mat <- sim_ob$sim_object$full_dat[[1]]
   trait_mat_as_df <- function(trait_mat, d, m) {
@@ -31,7 +36,7 @@ make_df_from_sim <- function(sim_ob) {
       left_join(pops, by = c("Time", "Species"))
   }
   
-  full_df <- mapply(trait_mat_as_df, sim_ob$sim_object$full_dat[!sapply(sim_ob$sim_object$full_dat, is.null)], 
+  full_df <- mapply(trait_mat_as_df, full_dat[!sapply(full_dat, is.null)], 
                     d, ms, SIMPLIFY = FALSE) 
   
   for(i in 2:length(full_df)) {
@@ -76,14 +81,14 @@ sim_animation <- function(sim_ob, file_name = NULL, view = FALSE, expand_factor 
   contour_df <- crossing(Niche_Axis_1 = seq(x_lims[1], x_lims[2], length.out = contour_res),
                          Niche_Axis_2 = seq(y_lims[1], y_lims[2], length.out = contour_res)) 
   z <- apply(contour_df %>% as.matrix, 1, 
-                     function(x) K_func(x, h0 = sim_ob$params$K_parms$h0, 
-                                        sig0i = sim_ob$params$K_parms$sigma0i, 
-                                        P0i = sim_ob$params$K_parms$P0i,
-                                        hz = sim_ob$params$K_parms$hz, 
-                                        biz = sim_ob$params$K_parms$biz,
-                                        sigiz = sim_ob$params$K_parms$sigiz,
-                                        Piz = sim_ob$params$K_parms$Piz, 
-                                        a = sim_ob$params$K_parms$a))
+                     function(x) K_func(x, h0 = sim_ob$sim_params$K_parms$h0, 
+                                        sig0i = sim_ob$sim_params$K_parms$sigma0i, 
+                                        P0i = sim_ob$sim_params$K_parms$P0i,
+                                        hz = sim_ob$sim_params$K_parms$hz, 
+                                        biz = sim_ob$sim_params$K_parms$biz,
+                                        sigiz = sim_ob$sim_params$K_parms$sigiz,
+                                        Piz = sim_ob$sim_params$K_parms$Piz, 
+                                        a = sim_ob$sim_params$K_parms$a))
   
   contour_df <- contour_df %>%
     mutate(K = z)

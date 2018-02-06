@@ -62,19 +62,25 @@ drops off to nearly zero; vector of length d}
 capacity drops off near the landscape borders in each dimension. Higher values give more extreme drop-offs;
 vector of length d}
 \item{\code{a}}{: Minimum values of carrying capacity within landscape limits}
+\item{\code{c_var}}{: Variance of the deviations added to each species carrying capacity.
+If this is zero, no deviations are added. The purpose of this is to ensure no two species occupying
+the same niche position can have exact fitness equivalence, which can lead to infinite coexistence.
+New deviates are drawn after every simulation event, to simulate demographic stochasticity.}
 }
 }
 
 \section{\code{a_parms}}{
 
 \itemize{
-\item{\code{gamma_i}}{: Strength of competition; determines how quickly the competition
+\item{\code{gamma_i}}{: Strength of competition - influence; determines how quickly the competition
 strength between two species drops off with increasing distance between their niche
 trait values; vector of length d, where d is the number of niche dimensions}
 \item{\code{D_i}}{: Super-gaussiain parameter for competition; this parameter controls
 how the precipitously the competition strength drops off with increasing niche distance.
 Higher values lead to a more cliff-like competition kernel, with strong competition
 between highly similar species, then very little competition beyond some threshold}
+#' \item{\code{C}}{: Strength of competition - max competition; determines the maximum
+competition between two species as a proportion of competition within species (which is always 1)}
 }
 }
 

@@ -1,4 +1,5 @@
-#' Function to generate example paraeter objects.
+#' Function to generate example parameter objects.
+#' @export example_parms
 example_parms <- function(name = c("simple_peaks_2", "blackhole_comp")) {
   params <- switch(name, 
                    list(simple_peaks_2 =

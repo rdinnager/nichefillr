@@ -91,7 +91,11 @@ adapt_landscape_comp_dyn <- nimbleFunction(
           beta_4_rsi[r, s, i] <- p3 
         }
         beta_3_rs[r, s] <- sum(beta_3_rsi[r, s, ]) ## sum across d
-        new_N_part[r, s] <- N[s]*C*exp(-beta_3_rs[r, s]) ## for population dynamics
+        if(r != s) {
+          new_N_part[r, s] <- N[s]*C*exp(-beta_3_rs[r, s]) ## for population dynamics
+        } else {
+          new_N_part[r, s] <- N[s]*exp(-beta_3_rs[r, s]) ## for population dynamics
+        }
       }
     }
     
@@ -102,10 +106,11 @@ adapt_landscape_comp_dyn <- nimbleFunction(
           #alpha_num_1_rsi[r, s, i] <- (beta_4_rsi[r, s, i]*D_i[i]*exp(beta_1_r[r] - beta_3_rs[r, s])*(((beta_4_rsi[r, s, i]^2)/(2*gamma_i[i]^2))^(D_i[i] - 1))) / (h0*a_sum_r[r])
           if(r != s) {
             alpha_num_1_rsi[r, s, i] <- (beta_4_rsi[r, s, i]*C*D_i[i]*exp(beta_1_r[r] - beta_3_rs[r, s])*(((beta_4_rsi[r, s, i]^2)/(2*gamma_i[i]^2))^(D_i[i] - 1))) / (h0*a_sum_r[r])
+            beta_full_ris[r, i, s] <- N[s]*(((C*exp(2*beta_1_r[r] - beta_3_rs[r, s])*(h0*(exp(-beta_1_r[r]))*(K_num_1_ri[r, i]) - K_num_2_ri[r, i])) / ((h0*a_sum_r[r])^2)) - alpha_num_1_rsi[r, s, i])
           } else {
             alpha_num_1_rsi[r, s, i] <- 0
+            beta_full_ris[r, i, s] <- N[s]*(((exp(2*beta_1_r[r] - beta_3_rs[r, s])*(h0*(exp(-beta_1_r[r]))*(K_num_1_ri[r, i]) - K_num_2_ri[r, i])) / ((h0*a_sum_r[r])^2)) - alpha_num_1_rsi[r, s, i])
           }
-          beta_full_ris[r, i, s] <- N[s]*(((C*exp(2*beta_1_r[r] - beta_3_rs[r, s])*(h0*(exp(-beta_1_r[r]))*(K_num_1_ri[r, i]) - K_num_2_ri[r, i])) / ((h0*a_sum_r[r])^2)) - alpha_num_1_rsi[r, s, i])
         }
       }
     }

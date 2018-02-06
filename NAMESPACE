@@ -2,6 +2,7 @@
 
 export(K_func)
 export(continue_sim_radiation)
+export(example_parms)
 export(extract_final_SR)
 export(extract_params)
 export(generate_all_params)

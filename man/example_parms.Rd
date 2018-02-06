@@ -2,10 +2,10 @@
 % Please edit documentation in R/param_gen.R
 \name{example_parms}
 \alias{example_parms}
-\title{Function to generate example paraeter objects.}
+\title{Function to generate example parameter objects.}
 \usage{
 example_parms(name = c("simple_peaks_2", "blackhole_comp"))
 }
 \description{
-Function to generate example paraeter objects.
+Function to generate example parameter objects.
 }

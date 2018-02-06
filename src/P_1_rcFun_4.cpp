@@ -130,7 +130,11 @@ for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
   Interm_8 = beta_3_rsi.dim()[2];
   new (&Eig_beta_3_rsiInterm_16) EigenMapStrd(beta_3_rsi.getPtr() + static_cast<int>(static_cast<int>((r - 1) * beta_3_rsi.strides()[0] + (s - 1) * beta_3_rsi.strides()[1])),beta_3_rsi.dim()[2],1,EigStrDyn(0, beta_3_rsi.strides()[2]));
   beta_3_rs((r) - 1, (s) - 1) = (Eig_beta_3_rsiInterm_16).sum();
-  new_N_part((r) - 1, (s) - 1) = (N[(s) - 1] * ARG17_C_) * exp(-(beta_3_rs((r) - 1, (s) - 1)));
+  if(r != s) {
+   new_N_part((r) - 1, (s) - 1) = (N[(s) - 1] * ARG17_C_) * exp(-(beta_3_rs((r) - 1, (s) - 1)));
+  } else {
+   new_N_part((r) - 1, (s) - 1) = N[(s) - 1] * exp(-(beta_3_rs((r) - 1, (s) - 1)));
+  }
  }
 }
 for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
@@ -138,10 +142,11 @@ for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
   for(i=1; i<= static_cast<int>(ARG1_d_); ++i) {
    if(r != s) {
     alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1) = ((((beta_4_rsi((r) - 1, (s) - 1, (i) - 1) * ARG17_C_) * ARG10_D_i_[(i) - 1]) * exp(beta_1_r[(r) - 1] - beta_3_rs((r) - 1, (s) - 1))) * (pow( static_cast<double>(((pow( static_cast<double>(beta_4_rsi((r) - 1, (s) - 1, (i) - 1)),2)) / static_cast<double>((2 * pow( static_cast<double>(ARG15_gamma_i_[(i) - 1]),2))))),(ARG10_D_i_[(i) - 1] - 1)))) / static_cast<double>((ARG5_h0_ * a_sum_r[(r) - 1]));
+    beta_full_ris((r) - 1, (i) - 1, (s) - 1) = N[(s) - 1] * ((((ARG17_C_ * exp(2 * beta_1_r[(r) - 1] - beta_3_rs((r) - 1, (s) - 1))) * ((ARG5_h0_ * (exp(-(beta_1_r[(r) - 1])))) * (K_num_1_ri((r) - 1, (i) - 1)) - K_num_2_ri((r) - 1, (i) - 1))) / static_cast<double>((pow( static_cast<double>((ARG5_h0_ * a_sum_r[(r) - 1])),2)))) - alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1));
    } else {
     alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1) = 0;
+    beta_full_ris((r) - 1, (i) - 1, (s) - 1) = N[(s) - 1] * (((exp(2 * beta_1_r[(r) - 1] - beta_3_rs((r) - 1, (s) - 1)) * ((ARG5_h0_ * (exp(-(beta_1_r[(r) - 1])))) * (K_num_1_ri((r) - 1, (i) - 1)) - K_num_2_ri((r) - 1, (i) - 1))) / static_cast<double>((pow( static_cast<double>((ARG5_h0_ * a_sum_r[(r) - 1])),2)))) - alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1));
    }
-   beta_full_ris((r) - 1, (i) - 1, (s) - 1) = N[(s) - 1] * ((((ARG17_C_ * exp(2 * beta_1_r[(r) - 1] - beta_3_rs((r) - 1, (s) - 1))) * ((ARG5_h0_ * (exp(-(beta_1_r[(r) - 1])))) * (K_num_1_ri((r) - 1, (i) - 1)) - K_num_2_ri((r) - 1, (i) - 1))) / static_cast<double>((pow( static_cast<double>((ARG5_h0_ * a_sum_r[(r) - 1])),2)))) - alpha_num_1_rsi((r) - 1, (s) - 1, (i) - 1));
   }
  }
 }

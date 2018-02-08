@@ -1,7 +1,7 @@
 #' Function that takes a list of parameter objects and runs them all, with optional parallelization
 #' @import pbapply
 #' @importFrom readr write_rds
-#' @importFrom parallel makeCluster, stopCluster
+#' @importFrom parallel makeCluster stopCluster
 sim_radiation_multi <- function(parm_list, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01, ncpus = NULL, save_folder = NULL, save_prefix = "sim_", compress = "gz") {
   
   run_sim <- function(parms) {

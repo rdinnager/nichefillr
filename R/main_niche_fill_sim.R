@@ -111,7 +111,7 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
                                                          progress = progress,
                                                          trait_hist = trait_hist, 
                                                          trait_hist_prop = trait_hist_prop))
-  
+  class(result) <- "nichfillr_sim"
   return(result)
   
 }

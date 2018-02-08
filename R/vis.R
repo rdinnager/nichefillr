@@ -177,14 +177,17 @@ plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, exp
       mutate(K = z)
   }
   message("Generating plot...")
-  pp <- ggplot(plot_df, aes(Niche_Axis_1, Niche_Axis_2)) +
-    geom_point(aes(colour = Species, alpha = Time, size = Population)) +
-    geom_point(aes(size = Population), data = extant_df, shape = 21, fill = NA) +
-    theme_minimal()
+  pp <- ggplot(plot_df, aes(Niche_Axis_1, Niche_Axis_2))
   if(fitness_contour) {
     pp <- pp + geom_contour(aes(z = K), data = contour_df, colour = "grey")
   }
+  pp <- pp +
+    geom_point(aes(colour = Species, alpha = Time, size = Population)) +
+    geom_point(aes(size = Population), data = extant_df, shape = 21, fill = NA) +
+    scale_size_area() +
+    theme_minimal()
   
-  pp
+  
+  pp + #theme_void() + theme(legend.position = "none")
   
 }

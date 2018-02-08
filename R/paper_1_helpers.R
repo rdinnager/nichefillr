@@ -249,110 +249,110 @@ run_sims_paper_1 <- function(num_reps, num_cores, folder = "results", prefix, co
   write_csv(results, paste0(folder, "/", prefix, "_results_data.csv"))
 }
 
-#' Generate Quasi Monte Carlo Random Parameters for Simulation
-#' 
-#' Function that takes a set of minimum and maximum values and generates uniform random values
-#' for each parameter within a hypercube using QuasiMC
-#' 
-#' @param reps Number of random sets of paramters to generate
-#' @param xx_range Vectors of length two, specifying the minimum and maximum values of
-#' parameter \code{xx} in the model
-#' 
-#' @return A data.frame containing the random parameter values
-#' 
-#' @import dplyr
-#' @importFrom randtoolbox sobol
-#' 
-#' @export
-generate_random_params_QMC <- function(reps = 10000,
-                                   potent_vol_range = c(1, 20), total_vol_range = c(5, 5), 
-                                   num_peaks_range = c(2L, 10L),
-                                   P_min_range = c(0.9, 0.9),
-                                   P_max_range = c(1.1, 1.1),
-                                   prop_variance_range = c(0.1, 0.5),
-                                   d_range = c(2L, 2L), P_range = c(1, 1),
-                                   e_var_range = c(0.1, 0.4),
-                                   gamma_range = c(0.01, 1),
-                                   b_rate_range = c(0.001, 0.003),
-                                   D_range = c(1, 1),
-                                   h_to_sig_ratio_range = c(0.5, 2),
-                                   a_prop_range = c(0.05, 0.05),
-                                   tot_time_range = c(50000, 50000),
-                                   V_range = c(0.01, 0.01),
-                                   mult_range = c(1, 1)) {
-  
-  h_to_sig_ratio_range <- log(h_to_sig_ratio_range)
-  
-  varying <- c(potent_vol = ifelse(potent_vol_range[2] - potent_vol_range[1] > 0, TRUE, FALSE),
-               total_vol = ifelse(total_vol_range[2] - total_vol_range[1] > 0, TRUE, FALSE),
-               P_min = ifelse(P_min_range[2] - P_min_range[1] > 0, TRUE, FALSE),
-               P_max = ifelse(P_max_range[2] - P_max_range[1] > 0, TRUE, FALSE),
-               prop_variance = ifelse(prop_variance_range[2] - prop_variance_range[1] > 0, TRUE, FALSE),
-               e_var = ifelse(e_var_range[2] - e_var_range[1] > 0, TRUE, FALSE),
-               gamma = ifelse(gamma_range[2] - gamma_range[1] > 0, TRUE, FALSE),
-               b_rate = ifelse(b_rate_range[2] - b_rate_range[1] > 0, TRUE, FALSE),
-               D = ifelse(D_range[2] - D_range[1] > 0, TRUE, FALSE),
-               h_to_sig_ratio = ifelse(h_to_sig_ratio_range[2] - h_to_sig_ratio_range[1] > 0, TRUE, FALSE),
-               a_prop = ifelse(a_prop_range[2] - a_prop_range[1] > 0, TRUE, FALSE),
-               tot_time = ifelse(tot_time_range[2] - tot_time_range[1] > 0, TRUE, FALSE),
-               V_gi = ifelse(V_range[2] - V_range[1] > 0, TRUE, FALSE),
-               mult = ifelse(mult_range[2] - mult_range[1] > 0, TRUE, FALSE),
-               P = ifelse(P_range[2] - P_range[1] > 0, TRUE, FALSE))
-  
-  ranges <- list(potent_vol = potent_vol_range,
-              total_vol = total_vol_range,
-              P_min = P_min_range,
-              P_max = P_max_range,
-              prop_variance = prop_variance_range,
-              e_var = e_var_range,
-              gamma = gamma_range,
-              b_rate = b_rate_range,
-              D = D_range,
-              h_to_sig_ratio = h_to_sig_ratio_range,
-              a_prop = a_prop_range,
-              tot_time = tot_time_range,
-              V_gi = V_range,
-              mult = mult_range,
-              P = P_range)
-  
-  qmc_dim <- sum(varying)
-  
-  rand_pts <- sobol(reps, qmc_dim, scrambling = 3)
-  colnames(rand_pts) <- names(varying[varying])
-  
-  for(i in 1:ncol(rand_pts)) {
-    rand_pts[ , i] <- (rand_pts[ , i] * (ranges[[colnames(rand_pts)[i]]][2] - ranges[[colnames(rand_pts)[i]]][1])) + 
-      ranges[[colnames(rand_pts)[i]]][1]
-  }
-  
-  if(length(unique(d_range)) < 2) {
-    d_range <- rep(d_range, 2)
-  } else {
-    d_range <- d_range[1]:d_range[2]
-  }
-  
-  if(length(unique(num_peaks_range)) < 2) {
-    num_peaks_range <- rep(num_peaks_range, 2)
-  } else {
-    num_peaks_range <- num_peaks_range[1]:num_peaks_range[2]
-  }
-  
-  other_dim <- sum(varying == FALSE)
-  
-  non_varying_params <- replicate(other_dim, rep(1, reps))
-  colnames(non_varying_params) <- names(varying[!varying])
-  
-  for(i in 1:ncol(non_varying_params)) {
-    non_varying_params[ , i] <- (non_varying_params[ , i] * (ranges[[colnames(non_varying_params)[i]]][2] - ranges[[colnames(non_varying_params)[i]]][1])) + 
-      ranges[[colnames(non_varying_params)[i]]][1]
-  }
-  
-  param_df <- data_frame(rep = 1:reps,
-                         num_peaks = sample(num_peaks_range, reps, replace = TRUE),
-                         d = sample(d_range, reps, replace = TRUE)) %>%
-    bind_cols(rand_pts %>% as.data.frame()) %>%
-    bind_cols(non_varying_params %>% as.data.frame()) %>%
-    mutate(dirichlet_param = nichefillr:::gen_dirichlet(prop_variance, num_peaks)) %>%
-    transform(h_to_sig_ratio = exp(h_to_sig_ratio))
-  
-}
+#' #' Generate Quasi Monte Carlo Random Parameters for Simulation
+#' #' 
+#' #' Function that takes a set of minimum and maximum values and generates uniform random values
+#' #' for each parameter within a hypercube using QuasiMC
+#' #' 
+#' #' @param reps Number of random sets of paramters to generate
+#' #' @param xx_range Vectors of length two, specifying the minimum and maximum values of
+#' #' parameter \code{xx} in the model
+#' #' 
+#' #' @return A data.frame containing the random parameter values
+#' #' 
+#' #' @import dplyr
+#' #' @importFrom randtoolbox sobol
+#' #' 
+#' #' @export
+#' generate_random_params_QMC <- function(reps = 10000,
+#'                                    potent_vol_range = c(1, 20), total_vol_range = c(5, 5), 
+#'                                    num_peaks_range = c(2L, 10L),
+#'                                    P_min_range = c(0.9, 0.9),
+#'                                    P_max_range = c(1.1, 1.1),
+#'                                    prop_variance_range = c(0.1, 0.5),
+#'                                    d_range = c(2L, 2L), P_range = c(1, 1),
+#'                                    e_var_range = c(0.1, 0.4),
+#'                                    gamma_range = c(0.01, 1),
+#'                                    b_rate_range = c(0.001, 0.003),
+#'                                    D_range = c(1, 1),
+#'                                    h_to_sig_ratio_range = c(0.5, 2),
+#'                                    a_prop_range = c(0.05, 0.05),
+#'                                    tot_time_range = c(50000, 50000),
+#'                                    V_range = c(0.01, 0.01),
+#'                                    mult_range = c(1, 1)) {
+#'   
+#'   h_to_sig_ratio_range <- log(h_to_sig_ratio_range)
+#'   
+#'   varying <- c(potent_vol = ifelse(potent_vol_range[2] - potent_vol_range[1] > 0, TRUE, FALSE),
+#'                total_vol = ifelse(total_vol_range[2] - total_vol_range[1] > 0, TRUE, FALSE),
+#'                P_min = ifelse(P_min_range[2] - P_min_range[1] > 0, TRUE, FALSE),
+#'                P_max = ifelse(P_max_range[2] - P_max_range[1] > 0, TRUE, FALSE),
+#'                prop_variance = ifelse(prop_variance_range[2] - prop_variance_range[1] > 0, TRUE, FALSE),
+#'                e_var = ifelse(e_var_range[2] - e_var_range[1] > 0, TRUE, FALSE),
+#'                gamma = ifelse(gamma_range[2] - gamma_range[1] > 0, TRUE, FALSE),
+#'                b_rate = ifelse(b_rate_range[2] - b_rate_range[1] > 0, TRUE, FALSE),
+#'                D = ifelse(D_range[2] - D_range[1] > 0, TRUE, FALSE),
+#'                h_to_sig_ratio = ifelse(h_to_sig_ratio_range[2] - h_to_sig_ratio_range[1] > 0, TRUE, FALSE),
+#'                a_prop = ifelse(a_prop_range[2] - a_prop_range[1] > 0, TRUE, FALSE),
+#'                tot_time = ifelse(tot_time_range[2] - tot_time_range[1] > 0, TRUE, FALSE),
+#'                V_gi = ifelse(V_range[2] - V_range[1] > 0, TRUE, FALSE),
+#'                mult = ifelse(mult_range[2] - mult_range[1] > 0, TRUE, FALSE),
+#'                P = ifelse(P_range[2] - P_range[1] > 0, TRUE, FALSE))
+#'   
+#'   ranges <- list(potent_vol = potent_vol_range,
+#'               total_vol = total_vol_range,
+#'               P_min = P_min_range,
+#'               P_max = P_max_range,
+#'               prop_variance = prop_variance_range,
+#'               e_var = e_var_range,
+#'               gamma = gamma_range,
+#'               b_rate = b_rate_range,
+#'               D = D_range,
+#'               h_to_sig_ratio = h_to_sig_ratio_range,
+#'               a_prop = a_prop_range,
+#'               tot_time = tot_time_range,
+#'               V_gi = V_range,
+#'               mult = mult_range,
+#'               P = P_range)
+#'   
+#'   qmc_dim <- sum(varying)
+#'   
+#'   rand_pts <- sobol(reps, qmc_dim, scrambling = 3)
+#'   colnames(rand_pts) <- names(varying[varying])
+#'   
+#'   for(i in 1:ncol(rand_pts)) {
+#'     rand_pts[ , i] <- (rand_pts[ , i] * (ranges[[colnames(rand_pts)[i]]][2] - ranges[[colnames(rand_pts)[i]]][1])) + 
+#'       ranges[[colnames(rand_pts)[i]]][1]
+#'   }
+#'   
+#'   if(length(unique(d_range)) < 2) {
+#'     d_range <- rep(d_range, 2)
+#'   } else {
+#'     d_range <- d_range[1]:d_range[2]
+#'   }
+#'   
+#'   if(length(unique(num_peaks_range)) < 2) {
+#'     num_peaks_range <- rep(num_peaks_range, 2)
+#'   } else {
+#'     num_peaks_range <- num_peaks_range[1]:num_peaks_range[2]
+#'   }
+#'   
+#'   other_dim <- sum(varying == FALSE)
+#'   
+#'   non_varying_params <- replicate(other_dim, rep(1, reps))
+#'   colnames(non_varying_params) <- names(varying[!varying])
+#'   
+#'   for(i in 1:ncol(non_varying_params)) {
+#'     non_varying_params[ , i] <- (non_varying_params[ , i] * (ranges[[colnames(non_varying_params)[i]]][2] - ranges[[colnames(non_varying_params)[i]]][1])) + 
+#'       ranges[[colnames(non_varying_params)[i]]][1]
+#'   }
+#'   
+#'   param_df <- data_frame(rep = 1:reps,
+#'                          num_peaks = sample(num_peaks_range, reps, replace = TRUE),
+#'                          d = sample(d_range, reps, replace = TRUE)) %>%
+#'     bind_cols(rand_pts %>% as.data.frame()) %>%
+#'     bind_cols(non_varying_params %>% as.data.frame()) %>%
+#'     mutate(dirichlet_param = nichefillr:::gen_dirichlet(prop_variance, num_peaks)) %>%
+#'     transform(h_to_sig_ratio = exp(h_to_sig_ratio))
+#'   
+#' }

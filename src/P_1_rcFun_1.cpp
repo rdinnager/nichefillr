@@ -1,5 +1,8 @@
-#ifndef __P_1_RCFUN_4_CPP
-#define __P_1_RCFUN_4_CPP
+#ifndef __P_1_RCFUN_1_CPP
+#define __P_1_RCFUN_1_CPP
+#ifndef R_NO_REMAP
+#define R_NO_REMAP
+#endif
 #include <nimble/EigenTypedefs.h>
 #include <Rmath.h>
 #include <math.h>
@@ -7,10 +10,9 @@
 #include <nimble/accessorClasses.h>
 #include <iostream>
 #include <nimble/RcppUtils.h>
-#include "P_1_rcFun_4.h"
-#undef eval
+#include "P_1_rcFun_1.h"
 
-NimArr<1, double>  rcFun_4 ( int ARG1_d_, int ARG2_m_, int ARG3_u_, double ARG4_a_, double ARG5_h0_, NimArr<1, double> & ARG6_h_z_, NimArr<1, double> & ARG7_P0_i_, NimArr<1, double> & ARG8_sigma0_i_, NimArr<2, double> & ARG9_P_iz_, NimArr<1, double> & ARG10_D_i_, NimArr<2, double> & ARG11_b_iz_, NimArr<1, double> & ARG12_state_, NimArr<1, double> & ARG13_V_gi_, NimArr<2, double> & ARG14_sigma_iz_, NimArr<1, double> & ARG15_gamma_i_, NimArr<1, double> & ARG16_c_r_, double ARG17_C_ )  {
+NimArr<1, double>  rcFun_1 ( int ARG1_d_, int ARG2_m_, int ARG3_u_, double ARG4_a_, double ARG5_h0_, NimArr<1, double> & ARG6_h_z_, NimArr<1, double> & ARG7_P0_i_, NimArr<1, double> & ARG8_sigma0_i_, NimArr<2, double> & ARG9_P_iz_, NimArr<1, double> & ARG10_D_i_, NimArr<2, double> & ARG11_b_iz_, NimArr<1, double> & ARG12_state_, NimArr<1, double> & ARG13_V_gi_, NimArr<2, double> & ARG14_sigma_iz_, NimArr<1, double> & ARG15_gamma_i_, NimArr<1, double> & ARG16_c_r_, double ARG17_C_ )  {
 NimArr<1, double> new_state;
 double Interm_1;
 int Interm_2;
@@ -58,30 +60,30 @@ EigenMapStrd Eig_K_num_1_rizInterm_15(0,0,0, EigStrDyn(0, 0));
 EigenMapStrd Eig_beta_3_rsiInterm_16(0,0,0, EigStrDyn(0, 0));
 EigenMapStrd Eig_beta_full_risInterm_17(0,0,0, EigStrDyn(0, 0));
 Map<MatrixXd> Eig_new_N_part(0,0,0);
-new_state.initialize(0, 1, 1, 1, static_cast<int>(ARG12_state_.size()));
+new_state.initialize(0, true, true, true, static_cast<int>(ARG12_state_.size()));
 Interm_1 = (ARG1_d_ * ARG2_m_ + 1);
 Interm_2 = (ARG1_d_ * ARG2_m_ + ARG2_m_);
 N.setSize((Interm_2 - Interm_1) + 1, 0, 0);
 new (&Eig_N) Map< MatrixXd >(N.getPtr(),(Interm_2 - Interm_1) + 1,1);
 new (&Eig_ARG12_state_Interm_13) EigenMapStrd(ARG12_state_.getPtr() + static_cast<int>(ARG12_state_.getOffset() + static_cast<int>(0)),ARG12_state_.dim()[0],1,EigStrDyn(0, ARG12_state_.strides()[0]));
 Eig_N = (Eig_ARG12_state_Interm_13).block(Interm_1 - 1, 0, (Interm_2 - Interm_1) + 1, 1);
-new_N_part.initialize(0, 1, 1, 1, ARG2_m_, ARG2_m_);
-Tr.initialize(0, 1, 1, 1, ARG2_m_, ARG1_d_);
-beta_1_ri.initialize(0, 1, 1, 1, ARG2_m_, ARG1_d_);
-beta_1_r.initialize(0, 1, 1, 1, ARG2_m_);
-beta_2_rzi.initialize(0, 1, 1, 1, ARG2_m_, ARG3_u_, ARG1_d_);
-beta_2_rz.initialize(0, 1, 1, 1, ARG2_m_, ARG3_u_);
-beta_3_rsi.initialize(0, 1, 1, 1, ARG2_m_, ARG2_m_, ARG1_d_);
-beta_3_rs.initialize(0, 1, 1, 1, ARG2_m_, ARG2_m_);
-beta_4_rsi.initialize(0, 1, 1, 1, ARG2_m_, ARG2_m_, ARG1_d_);
-beta_5_rzi.initialize(0, 1, 1, 1, ARG2_m_, ARG3_u_, ARG1_d_);
-beta_full_ris.initialize(0, 1, 1, 1, ARG2_m_, ARG1_d_, ARG2_m_);
-K_num_1_riz.initialize(0, 1, 1, 1, ARG2_m_, ARG1_d_, ARG3_u_);
-K_num_1_ri.initialize(0, 1, 1, 1, ARG2_m_, ARG1_d_);
-a_sum_rz.initialize(0, 1, 1, 1, ARG2_m_, ARG3_u_);
-a_sum_r.initialize(0, 1, 1, 1, ARG2_m_);
-K_num_2_ri.initialize(0, 1, 1, 1, ARG2_m_, ARG1_d_);
-alpha_num_1_rsi.initialize(0, 1, 1, 1, ARG2_m_, ARG2_m_, ARG1_d_);
+new_N_part.initialize(0, true, true, true, ARG2_m_, ARG2_m_);
+Tr.initialize(0, true, true, true, ARG2_m_, ARG1_d_);
+beta_1_ri.initialize(0, true, true, true, ARG2_m_, ARG1_d_);
+beta_1_r.initialize(0, true, true, true, ARG2_m_);
+beta_2_rzi.initialize(0, true, true, true, ARG2_m_, ARG3_u_, ARG1_d_);
+beta_2_rz.initialize(0, true, true, true, ARG2_m_, ARG3_u_);
+beta_3_rsi.initialize(0, true, true, true, ARG2_m_, ARG2_m_, ARG1_d_);
+beta_3_rs.initialize(0, true, true, true, ARG2_m_, ARG2_m_);
+beta_4_rsi.initialize(0, true, true, true, ARG2_m_, ARG2_m_, ARG1_d_);
+beta_5_rzi.initialize(0, true, true, true, ARG2_m_, ARG3_u_, ARG1_d_);
+beta_full_ris.initialize(0, true, true, true, ARG2_m_, ARG1_d_, ARG2_m_);
+K_num_1_riz.initialize(0, true, true, true, ARG2_m_, ARG1_d_, ARG3_u_);
+K_num_1_ri.initialize(0, true, true, true, ARG2_m_, ARG1_d_);
+a_sum_rz.initialize(0, true, true, true, ARG2_m_, ARG3_u_);
+a_sum_r.initialize(0, true, true, true, ARG2_m_);
+K_num_2_ri.initialize(0, true, true, true, ARG2_m_, ARG1_d_);
+alpha_num_1_rsi.initialize(0, true, true, true, ARG2_m_, ARG2_m_, ARG1_d_);
 for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
  for(i=1; i<= static_cast<int>(ARG1_d_); ++i) {
   p1 = ARG12_state_[(ARG1_d_ * (r - 1) + i) - 1];
@@ -165,7 +167,7 @@ for(r=1; r<= static_cast<int>(ARG2_m_); ++r) {
 return(new_state);
 }
 
-SEXP  CALL_rcFun_4 ( SEXP S_ARG1_d_, SEXP S_ARG2_m_, SEXP S_ARG3_u_, SEXP S_ARG4_a_, SEXP S_ARG5_h0_, SEXP S_ARG6_h_z_, SEXP S_ARG7_P0_i_, SEXP S_ARG8_sigma0_i_, SEXP S_ARG9_P_iz_, SEXP S_ARG10_D_i_, SEXP S_ARG11_b_iz_, SEXP S_ARG12_state_, SEXP S_ARG13_V_gi_, SEXP S_ARG14_sigma_iz_, SEXP S_ARG15_gamma_i_, SEXP S_ARG16_c_r_, SEXP S_ARG17_C_ )  {
+SEXP  CALL_rcFun_1 ( SEXP S_ARG1_d_, SEXP S_ARG2_m_, SEXP S_ARG3_u_, SEXP S_ARG4_a_, SEXP S_ARG5_h0_, SEXP S_ARG6_h_z_, SEXP S_ARG7_P0_i_, SEXP S_ARG8_sigma0_i_, SEXP S_ARG9_P_iz_, SEXP S_ARG10_D_i_, SEXP S_ARG11_b_iz_, SEXP S_ARG12_state_, SEXP S_ARG13_V_gi_, SEXP S_ARG14_sigma_iz_, SEXP S_ARG15_gamma_i_, SEXP S_ARG16_c_r_, SEXP S_ARG17_C_ )  {
 int ARG1_d_;
 int ARG2_m_;
 int ARG3_u_;
@@ -204,9 +206,9 @@ SEXP_2_NimArr<1>(S_ARG15_gamma_i_, ARG15_gamma_i_);
 SEXP_2_NimArr<1>(S_ARG16_c_r_, ARG16_c_r_);
 ARG17_C_ = SEXP_2_double(S_ARG17_C_);
 GetRNGstate();
-LHSvar_1234 = rcFun_4(ARG1_d_, ARG2_m_, ARG3_u_, ARG4_a_, ARG5_h0_, ARG6_h_z_, ARG7_P0_i_, ARG8_sigma0_i_, ARG9_P_iz_, ARG10_D_i_, ARG11_b_iz_, ARG12_state_, ARG13_V_gi_, ARG14_sigma_iz_, ARG15_gamma_i_, ARG16_c_r_, ARG17_C_);
+LHSvar_1234 = rcFun_1(ARG1_d_, ARG2_m_, ARG3_u_, ARG4_a_, ARG5_h0_, ARG6_h_z_, ARG7_P0_i_, ARG8_sigma0_i_, ARG9_P_iz_, ARG10_D_i_, ARG11_b_iz_, ARG12_state_, ARG13_V_gi_, ARG14_sigma_iz_, ARG15_gamma_i_, ARG16_c_r_, ARG17_C_);
 PutRNGstate();
-PROTECT(S_returnValue_LIST_1234 = allocVector(VECSXP, 18));
+PROTECT(S_returnValue_LIST_1234 = Rf_allocVector(VECSXP, 18));
 PROTECT(S_returnValue_1234 = NimArr_2_SEXP<1>(LHSvar_1234));
 PROTECT(S_ARG1_d_ = int_2_SEXP(ARG1_d_));
 PROTECT(S_ARG2_m_ = int_2_SEXP(ARG2_m_));

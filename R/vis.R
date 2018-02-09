@@ -188,6 +188,6 @@ plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, exp
     theme_minimal()
   
   
-  pp + #theme_void() + theme(legend.position = "none")
+  pp #theme_void() + theme(legend.position = "none")
   
 }

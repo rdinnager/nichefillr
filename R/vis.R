@@ -2,6 +2,7 @@
 #' @param sim_ob nichefillr_sim object containing the results of a simulation.
 #' @import dplyr
 #' @import tidyr
+#' @export make_df_from_sim
 make_df_from_sim <- function(sim_ob) {
   
   full_dat <- sim_ob$sim_object$full_dat$as.list()
@@ -129,5 +130,64 @@ sim_animation <- function(sim_ob, file_name = NULL, view = FALSE, expand_factor 
   }
   
   return(animation)
+  
+}
+
+#' Plot a \code{nichefillr_sim} object. If the simulation object contains a trait history,
+#' this function will by default plot a 'pollock plot'. If the object contains no trait history it
+#' will plot the trait values of the extant species, extinct species (optionally), 
+#' and ancestors (optionally). Currently only work for 2 dimensional simulations, eventually
+#' will work with higher dimensions through t-sne dimension reduction.
+#' @import ggplot2
+#' @import tidyr
+#' @import dplyr
+#' @export plot.nichfillr_sim
+plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, expand_factor = 0.1) {
+  message("Extracting trait history data from simulation (this might take awhile).... ")
+  plot_df <- make_df_from_sim(x)
+  extant_df <- t(x$sim_object$traits[ , x$sim_object$extant]) %>%
+    as.data.frame() %>%
+    rename(Niche_Axis_1 = V1, Niche_Axis_2 = V2) %>%
+    mutate(Species = paste0("Species_", 1:sum(x$sim_object$extant)),
+           Population = x$sim_object$Ns[x$sim_object$extant]) 
+  
+  x_lims <- c(min(plot_df$Niche_Axis_1), max(plot_df$Niche_Axis_1))
+  y_lims <- c(min(plot_df$Niche_Axis_2), max(plot_df$Niche_Axis_2))
+  
+  x_range <- x_lims[2] - x_lims[1]
+  y_range <- y_lims[2] - y_lims[1]
+  
+  x_lims <- x_lims + c(-x_range*expand_factor, x_range*expand_factor) 
+  y_lims <- y_lims + c(-y_range*expand_factor, y_range*expand_factor) 
+  
+  if(fitness_contour) {
+    contour_df <- crossing(Niche_Axis_1 = seq(x_lims[1], x_lims[2], length.out = contour_res),
+                           Niche_Axis_2 = seq(y_lims[1], y_lims[2], length.out = contour_res))
+    z <- apply(contour_df %>% as.matrix, 1, 
+               function(y) K_func(y, h0 = x$sim_params$K_parms$h0, 
+                                  sig0i = x$sim_params$K_parms$sigma0i, 
+                                  P0i = x$sim_params$K_parms$P0i,
+                                  hz = x$sim_params$K_parms$hz, 
+                                  biz = x$sim_params$K_parms$biz,
+                                  sigiz = x$sim_params$K_parms$sigiz,
+                                  Piz = x$sim_params$K_parms$Piz, 
+                                  a = x$sim_params$K_parms$a))
+    
+    contour_df <- contour_df %>%
+      mutate(K = z)
+  }
+  message("Generating plot...")
+  pp <- ggplot(plot_df, aes(Niche_Axis_1, Niche_Axis_2))
+  if(fitness_contour) {
+    pp <- pp + geom_contour(aes(z = K), data = contour_df, colour = "grey")
+  }
+  pp <- pp +
+    geom_point(aes(colour = Species, alpha = Time, size = Population)) +
+    geom_point(aes(size = Population), data = extant_df, shape = 21, fill = NA) +
+    scale_size_area() +
+    theme_minimal()
+  
+  
+  pp + #theme_void() + theme(legend.position = "none")
   
 }

@@ -6,6 +6,12 @@
 \usage{
 example_parms(name = c("simple_peaks_2", "blackhole_comp"))
 }
+\arguments{
+\item{name}{Name of example parameter set. See details for list of available options (not done yet).}
+}
+\value{
+A list containing a set of simulation parameters.
+}
 \description{
 Function to generate example parameter objects.
 }

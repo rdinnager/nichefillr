@@ -1,8 +1,9 @@
 #' Function that takes a list of parameter objects and runs them all, with optional parallelization
 #' @import pbapply
 #' @importFrom readr write_rds
-#' @importFrom parallel makeCluster stopCluster
-sim_radiation_multi <- function(parm_list, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01, ncpus = NULL, save_folder = NULL, save_prefix = "sim_", compress = "gz") {
+#' @importFrom parallel makeCluster stopCluster clusterEvalQ clusterExport
+#' @export sim_radiation_multi
+sim_radiation_multi <- function(parm_list, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01, ncpus = NULL, save_folder = NULL, save_prefix = "sim_", compress = "gz", return_sim = FALSE) {
   
   run_sim <- function(parms) {
     sim <- try(sim_radiation(parms, save_tree = save_tree, progress = FALSE, trait_hist = trait_hist,
@@ -16,7 +17,7 @@ sim_radiation_multi <- function(parm_list, save_tree = TRUE, progress = TRUE, tr
      cl <- makeCluster(ncpus)
      clusterEvalQ(cl, library(nichefillr))
      clusterEvalQ(cl, library(readr))
-     clusterExport(cl, c("save_folder", "save_tree", "trait_hist", "trait_hist_prop", "save_prefix", "compress"))
+     clusterExport(cl, c("save_folder", "save_tree", "trait_hist", "trait_hist_prop", "save_prefix", "compress", "run_sim"), envir=environment())
    } else {
      cl <- NULL
    }
@@ -24,5 +25,11 @@ sim_radiation_multi <- function(parm_list, save_tree = TRUE, progress = TRUE, tr
   
   if(!is.null(cl)) {
     stopCluster(cl)
+  }
+  
+  if(return_sim) {
+    return(sim_list)
+  } else {
+    return(NULL)
   }
 }

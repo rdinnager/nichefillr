@@ -1,12 +1,12 @@
 Package: nichefillr
 Version: 0.0.0.9000
-Title: What the Package Does (one line, title case)
-Description: What the package does (one paragraph).
-Authors@R: person("First", "Last", , "first.last@example.com", c("aut", "cre"))
+Title: Niche Filling Simulations in R
+Description: Package implementing efficient simulations of macroevolutionary phenomenon, including competition and adaptive dynamics.
+Authors@R: person("Russell", "Dinnage", , "r.dinnage@gmail.com", c("aut", "cre"))
 License: What license it uses
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
 LinkingTo: Rcpp, nimble
-Imports: Rcpp, cubature, deSolve, dplyr, nimble, progress, randtoolbox, readr, rgl
+Imports: Rcpp, cubature, deSolve, dplyr, nimble, progress, randtoolbox, readr, rgl, ggplot2, magick, pbapply, tidyr
 RoxygenNote: 6.0.1

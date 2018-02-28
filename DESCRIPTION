@@ -8,5 +8,5 @@ Encoding: UTF-8
 LazyData: true
 ByteCompile: true
 LinkingTo: Rcpp, nimble
-Imports: Rcpp, cubature, deSolve, dplyr, multidplyr, nimble, progress, randtoolbox, readr, rgl
+Imports: Rcpp, cubature, deSolve, dplyr, nimble, progress, randtoolbox, readr, rgl
 RoxygenNote: 6.0.1

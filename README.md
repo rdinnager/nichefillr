@@ -9,4 +9,4 @@ In the mean-time, here is an example of what the simulation can do. It shows a s
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1166254.svg)](https://doi.org/10.5281/zenodo.1166254)
 
-[![Build Status](https://travis-ci.org/rdinnager/nichefillr.svg?branch=master)](https://travis-ci.org/rdinnager/nichefillr)
+[![Build Status](https://travis-ci.org/rdinnager/nichefillr.svg?branch=development)](https://travis-ci.org/rdinnager/nichefillr)

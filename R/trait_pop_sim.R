@@ -11,7 +11,7 @@
 #' 
 #' @return List of derivatives compatible with \code{deSolve}
 trait_pop_sim_de <- function(t, y, parms) {
-  list(adapt_landscape_comp_dyn_cmp(d = parms$d, m = parms$m, u = parms$u, 
+  list(pkg.env$adapt_landscape_comp_dyn_cmp(d = parms$d, m = parms$m, u = parms$u, 
                                     a = parms$a, h0 = parms$h0,
                                     h_z = parms$h_z,
                                     P0_i = parms$P0_i, sigma0_i = parms$sigma0_i,

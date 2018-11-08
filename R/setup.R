@@ -155,6 +155,93 @@ compile_sim <- function(showCompilerOutput = FALSE) {
   
 }
 
+compile_fitness <- function(showCompilerOutput = FALSE) {
+  
+  adapt_landscape_fitness_comp_dyn <- nimbleFunction(
+    run = function(x = double(1), d = integer(0), m = integer(0), u = integer(0), a = double(0),
+                   h0 = double(0),
+                   h_z = double(1),
+                   P0 = double(0),
+                   sigma0_i = double(1),
+                   P_z = double(1),
+                   D_i = double(1),
+                   b_iz = double(2),
+                   state = double(1), V_gi = double(1),
+                   sigma_iz = double(2), gamma_i = double(1),
+                   C = double(0)) {
+      
+      new_state <- numeric(length = length(state), value = 0, init = TRUE)
+      N <- state[(d*m+1):(d*m+m)]
+      new_N_part <- numeric(value = 0, length = m)
+      #new_N <- N
+      Tr <- matrix(value = 0, nrow = m, ncol = d, init = TRUE, type = "double")
+      
+      beta_1_i <- numeric(length = d, value = 0, init = TRUE)
+      
+      
+      beta_2_zi <- matrix(value = 0, nrow = u, ncol = d, init = TRUE, type = "double")
+      beta_2_z <- numeric(value = 0, length = u, init = TRUE)
+      
+      a_sum_z <- numeric(length = u, value = 0, init = TRUE)
+      
+      beta_3_si <- matrix(value = 0, nrow = m, ncol = d, init = TRUE, type = "double")
+      beta_3_s <- numeric(value = 0, length = m, init = TRUE)
+      
+      
+      for (r in 1:m){
+        for(i in 1:d){
+          ## trait states are arranged to vary by dimension first, then species
+          p1 <- state[d * (r - 1) + i] ## get the right trait value from the state vector
+          Tr[r, i] <- p1 ## put it into a matrix for later use
+        }
+      }
+      
+      for(i in 1:d) {
+        beta_1_i[i] <- ((x[i]^2)  / (2*(sigma0_i[i])))
+      }
+      beta_1_x <- sum(beta_1_i[])^P0
+      
+      
+      for (z in 1:u) {
+        for (i in 1:d) {
+          p2 <- x[i] - b_iz[i, z]
+          beta_2_zi[z, i] <- (((p2)^2) / (2*(sigma_iz[i, z])^2))
+        }
+        beta_2_z[z] <- sum(beta_2_zi[z, ])^P_z[z] ## sum across d
+        a_sum_z[z] <- exp(-beta_2_z[z])*h_z[z]
+      }
+      
+      a_sum_x <- sum(a_sum_z[]) + a
+      
+      for (s in 1:m) {
+        for (i in 1:d) {
+          p3 <- Tr[s, i] - x[i]
+          beta_3_si[s, i] <- ((p3^2) / (2*(gamma_i[i]^2)))^D_i[i]
+        }
+        beta_3_s[s] <- sum(beta_3_si[s, ]) ## sum across d
+        if(r != s) {
+          new_N_part[s] <- N[s]*C*exp(-beta_3_s[s]) ## for population dynamics
+        } else {
+          new_N_part[s] <- N[s]*exp(-beta_3_s[s]) ## for population dynamics
+        }
+      }
+      
+      
+      
+      fitness <- (1 - ((exp(beta_1_x)*sum(new_N_part[])) / (h0*a_sum_x)))
+      
+      # #print(N)
+      return(fitness)
+      returnType(double(0))
+    }
+  )
+  
+  compiled_fitness <- compileNimble(adapt_landscape_fitness_comp_dyn, showCompilerOutput = FALSE)
+  
+  compiled_fitness
+  
+}
+
 .onLoad <- function(libname, pkgname) {
   # if(file.exists("inst/compiled_sim.rds")) {
   #   pkg.env$adapt_landscape_comp_dyn_cmp <- readRDS("inst/compiled_sim.rds")
@@ -173,5 +260,8 @@ compile_sim <- function(showCompilerOutput = FALSE) {
   
   compiled_sim <- compile_sim()
   pkg.env$adapt_landscape_comp_dyn_cmp <- compiled_sim
+  
+  compiled_fitness <- compile_fitness()
+  pkg.env$adapt_landscape_fitness_cmp <- compiled_fitness
   
 }

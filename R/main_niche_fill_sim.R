@@ -116,16 +116,39 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
   
 }
 
-sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01, arrest_speciation = FALSE) {
-  ode_parms <- list(d = params$d, m = params$m, u = length(params$K_parms$hz), 
-                    a = params$K_parms$a, h0 = params$K_parms$h0,
-                    h_z = params$K_parms$hz,
-                    P0_i = params$K_parms$P0i, sigma0_i = params$K_parms$sig0i,
-                    P_iz = params$K_parms$Piz, D_i = params$a_parms$D_i,
-                    b_iz = params$K_parms$biz, 
-                    V_gi = params$V_gi,
-                    sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i,
-                    C = params$C)
+sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01, arrest_speciation = FALSE, use_ellip = TRUE) {
+  
+  if(use_ellip) {
+    trait_pop_sim_de <- trait_pop_sim_de_ellip
+  }
+  
+  if(use_ellip) {
+    if(length(dim(params$K_parms$Piz)) > 1) {
+      P_z <- params$K_parms$Piz[1, , drop = TRUE]
+    } else {
+      P_z <- params$K_parms$Piz
+    }
+    ode_parms <- list(d = params$d, m = params$m, u = length(params$K_parms$hz), 
+                      a = params$K_parms$a, h0 = params$K_parms$h0,
+                      h_z = params$K_parms$hz,
+                      P0 = params$K_parms$P0i[1], sigma0_i = params$K_parms$sig0i,
+                      P_z = P_z, D0 = params$a_parms$D_i[1],
+                      b_iz = params$K_parms$biz, 
+                      V_gi = params$V_gi,
+                      sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i,
+                      C = params$C)
+  } else {
+  
+    ode_parms <- list(d = params$d, m = params$m, u = length(params$K_parms$hz), 
+                      a = params$K_parms$a, h0 = params$K_parms$h0,
+                      h_z = params$K_parms$hz,
+                      P0_i = params$K_parms$P0i, sigma0_i = params$K_parms$sig0i,
+                      P_iz = params$K_parms$Piz, D_i = params$a_parms$D_i,
+                      b_iz = params$K_parms$biz, 
+                      V_gi = params$V_gi,
+                      sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i,
+                      C = params$C)
+  }
   
   event_vec <- c(birth = tree_ob$b_rate, check_extinct = params$check_extinct)  
   #t <- tree_ob$n_tips_hist[,1][nrow(tree_ob$n_tips_hist)]
@@ -218,7 +241,7 @@ sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress 
       }
     }
   }
-  pr$tick(t - last_print, tokens = list(sr = sum(tree_ob$extant)))
+  #pr$tick(t - last_print, tokens = list(sr = sum(tree_ob$extant)))
   
   # tree_ob$full_dat <- tree_ob$full_dat$as.list()
   # tree_ob$extant_list <- tree_ob$extant_list$as.list()

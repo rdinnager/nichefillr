@@ -22,6 +22,22 @@ trait_pop_sim_de <- function(t, y, parms) {
                                     c_r = parms$c_r, C = parms$C))
 }
 
+trait_pop_sim_de_ellip <- function(t, y, parms) {
+  list(pkg.env$adapt_landscape_comp_dyn_cmp_ellip(d = parms$d, m = parms$m, u = parms$u, 
+                                            a = parms$a, h0 = parms$h0,
+                                            h_z = parms$h_z,
+                                            P0 = parms$P0, sigma0_i = parms$sigma0_i,
+                                            P_z = parms$P_z, D0 = parms$D0,
+                                            b_iz = parms$b_iz, state = y, 
+                                            V_gi = parms$V_gi,
+                                            sigma_iz = parms$sigma_iz, gamma_i = parms$gamma_i,
+                                            c_r = parms$c_r, C = parms$C))
+}
+
+temp_fitness_interface <- function(...) {
+  pkg.env$adapt_landscape_fitness_cmp(...)
+}
+
 #' Carrying Capacity Landscape Function (R version)
 #' 
 #' Carrying capacity function written in R, mostly for visualization or testing purposes.
@@ -49,10 +65,22 @@ trait_pop_sim_de <- function(t, y, parms) {
 K_func <- function(xi, h0 = 1, sig0i = c(5, 5), P0i = c(1.5, 1.5),
                    hz = c(1, 1), biz = matrix(c(-1, -1, 1, 1), nrow = 2, ncol = 2),
                    sigiz = matrix(c(1, 1, 1, 1), nrow = 2, ncol = 2),
-                   Piz = matrix(c(1, 1, 1, 1), nrow = 2, ncol = 2), a = 0.1) {
+                   Piz = matrix(c(1, 1, 1, 1), nrow = 2, ncol = 2), a = 0.1,
+                   use_ellip = TRUE) {
   
-  term_1 <- h0*exp(-sum((xi^2/(2*sig0i^2))^P0i))
-  term_2 <- sum(hz*exp(-colSums(((xi - biz)^2/(2*sigiz^2))^Piz))) + a
+  
+  if(use_ellip) {
+    P0i <- P0i[1]
+    if(length(dim(Piz)) > 1) {
+      Piz <- Piz[1, , drop = TRUE]
+    }
+    term_1 <- h0*exp(-sum((xi^2/(2*sig0i^2)))^P0i)
+    term_2 <- sum(hz*exp(-colSums(((xi - biz)^2/(2*sigiz^2)))^Piz)) + a
+  } else {
+    term_1 <- h0*exp(-sum((xi^2/(2*sig0i^2))^P0i))
+    term_2 <- sum(hz*exp(-colSums(((xi - biz)^2/(2*sigiz^2))^Piz))) + a
+  }
+
   term_1*term_2  
 }
 

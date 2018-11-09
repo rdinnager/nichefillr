@@ -164,7 +164,7 @@ compile_sim_ellip <- function(showCompilerOutput = FALSE) {
                    P0 = double(0),
                    sigma0_i = double(1),
                    P_z = double(1),
-                   D_i = double(1),
+                   D0 = double(0),
                    b_iz = double(2),
                    state = double(1), V_gi = double(1),
                    sigma_iz = double(2), gamma_i = double(1),
@@ -228,11 +228,11 @@ compile_sim_ellip <- function(showCompilerOutput = FALSE) {
       for (r in 1:m) {
         for (i in 1:d) {
           for (z in 1:u) {
-            K_num_1_riz[r, i, z] <- -(exp(-beta_2_rz[r, z])*beta_5_rzi[r, z, i]*h_z[z]*((beta_5_rzi[r, z, i]^2/(2*sigma_iz[i, z]^2))^(P_iz[i, z] - 1)))/(sigma_iz[i, z]^2)
+            K_num_1_riz[r, i, z] <- -(exp(-beta_2_rz[r, z])*(beta_5_rzi[r, z, i] / (sigma_iz[i, z]^2))*h_z[z]*P_z[z]*((beta_2_rz[r, z])^(P_z[z] - 1)))#/(sigma_iz[i, z]^2)
             #a_sum_riz[r, i, z] <- exp(beta_2_rzi[r, z, i])*h_z[z]
           }
-          K_num_1_ri[r, i] <- sum(K_num_1_riz[r, i, ])*P_z[z]
-          K_num_2_ri[r, i] <- (h0*exp(-beta_1_r[r])*Tr[r, i]*(((Tr[r, i]^2)/(2*sigma0_i[i]^2))^(P0_i[i] - 1))*a_sum_r[r]) / (sigma0_i[i]^2)
+          K_num_1_ri[r, i] <- sum(K_num_1_riz[r, i, ])
+          K_num_2_ri[r, i] <- (h0*P0*exp(-beta_1_r[r])*(Tr[r, i] / (sigma0_i[i]^2))*((beta_1_r[r])^(P0 - 1))*a_sum_r[r]) #/ (sigma0_i[i]^2)
         }
       }
       
@@ -241,10 +241,10 @@ compile_sim_ellip <- function(showCompilerOutput = FALSE) {
         for (s in 1:m) {
           for (i in 1:d) {
             p3 <- Tr[s, i] - Tr[r, i]
-            beta_3_rsi[r, s, i] <- ((p3^2) / (2*(gamma_i[i]^2)))^D_i[i]
+            beta_3_rsi[r, s, i] <- ((p3^2) / (2*(gamma_i[i]^2)))
             beta_4_rsi[r, s, i] <- p3 
           }
-          beta_3_rs[r, s] <- sum(beta_3_rsi[r, s, ]) ## sum across d
+          beta_3_rs[r, s] <- sum(beta_3_rsi[r, s, ])^D0 ## sum across d
           if(r != s) {
             new_N_part[r, s] <- N[s]*C*exp(-beta_3_rs[r, s]) ## for population dynamics
           } else {
@@ -259,11 +259,11 @@ compile_sim_ellip <- function(showCompilerOutput = FALSE) {
           for(i in 1:d){
             #alpha_num_1_rsi[r, s, i] <- (beta_4_rsi[r, s, i]*D_i[i]*exp(beta_1_r[r] - beta_3_rs[r, s])*(((beta_4_rsi[r, s, i]^2)/(2*gamma_i[i]^2))^(D_i[i] - 1))) / (h0*a_sum_r[r])
             if(r != s) {
-              alpha_num_1_rsi[r, s, i] <- (beta_4_rsi[r, s, i]*C*D_i[i]*exp(beta_1_r[r] - beta_3_rs[r, s])*(((beta_4_rsi[r, s, i]^2)/(2*gamma_i[i]^2))^(D_i[i] - 1))) / (h0*a_sum_r[r])
+              alpha_num_1_rsi[r, s, i] <- (beta_4_rsi[r, s, i]*C*D0*exp(beta_1_r[r] - beta_3_rs[r, s])*(((beta_4_rsi[r, s, i]^2)/(2*gamma_i[i]^2))^(D0 - 1))) / (h0*a_sum_r[r])
               beta_full_ris[r, i, s] <- N[s]*(((C*exp(2*beta_1_r[r] - beta_3_rs[r, s])*(h0*(exp(-beta_1_r[r]))*(K_num_1_ri[r, i]) - K_num_2_ri[r, i])) / ((h0*a_sum_r[r])^2)) - alpha_num_1_rsi[r, s, i])
             } else {
               alpha_num_1_rsi[r, s, i] <- 0
-              beta_full_ris[r, i, s] <- N[s]*(((exp(2*beta_1_r[r] - beta_3_rs[r, s])*(h0*P0*(exp(-beta_1_r[r]))*(K_num_1_ri[r, i]) - K_num_2_ri[r, i])) / ((h0*a_sum_r[r])^2)) - alpha_num_1_rsi[r, s, i])
+              beta_full_ris[r, i, s] <- N[s]*(((exp(2*beta_1_r[r] - beta_3_rs[r, s])*(h0*(exp(-beta_1_r[r]))*(K_num_1_ri[r, i]) - K_num_2_ri[r, i])) / ((h0*a_sum_r[r])^2)) - alpha_num_1_rsi[r, s, i])
             }
           }
         }
@@ -306,7 +306,7 @@ compile_fitness <- function(showCompilerOutput = FALSE) {
                    P0 = double(0),
                    sigma0_i = double(1),
                    P_z = double(1),
-                   D_i = double(1),
+                   D0 = double(0),
                    b_iz = double(2),
                    state = double(1), V_gi = double(1),
                    sigma_iz = double(2), gamma_i = double(1),
@@ -358,9 +358,9 @@ compile_fitness <- function(showCompilerOutput = FALSE) {
       for (s in 1:m) {
         for (i in 1:d) {
           p3 <- Tr[s, i] - x[i]
-          beta_3_si[s, i] <- ((p3^2) / (2*(gamma_i[i]^2)))^D_i[i]
+          beta_3_si[s, i] <- ((p3^2) / (2*(gamma_i[i]^2)))
         }
-        beta_3_s[s] <- sum(beta_3_si[s, ]) ## sum across d
+        beta_3_s[s] <- sum(beta_3_si[s, ])^D0 ## sum across d
         if(r != s) {
           new_N_part[s] <- N[s]*C*exp(-beta_3_s[s]) ## for population dynamics
         } else {

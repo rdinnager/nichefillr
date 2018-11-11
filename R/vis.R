@@ -185,9 +185,34 @@ plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, exp
     geom_point(aes(colour = Species, alpha = Time, size = Population)) +
     geom_point(aes(size = Population), data = extant_df, shape = 21, fill = NA) +
     scale_size_area() +
+    coord_equal() +
     theme_minimal()
   
   
   pp #theme_void() + theme(legend.position = "none")
   
+}
+
+#' @export plot_K_contour
+plot_K_contour <- function(K_parms, x_lims = c(-1, 1), y_lims = c(-1, 1), contour_res = 100, bins = 8, ...) {
+  contour_df <- crossing(Niche_Axis_1 = seq(x_lims[1], x_lims[2], length.out = contour_res),
+                         Niche_Axis_2 = seq(y_lims[1], y_lims[2], length.out = contour_res))
+  z <- apply(contour_df %>% as.matrix, 1, 
+             function(y) K_func(y, h0 = K_parms$h0, 
+                                sig0i = K_parms$sigma0i, 
+                                P0i = K_parms$P0i,
+                                hz = K_parms$hz, 
+                                biz = K_parms$biz,
+                                sigiz = K_parms$sigiz,
+                                Piz = K_parms$Piz, 
+                                a = K_parms$a,
+                                ...))
+  
+  contour_df <- contour_df %>%
+    mutate(K = z)
+  
+  pp <- ggplot(contour_df, aes(Niche_Axis_1, Niche_Axis_2)) +
+    geom_contour(aes(z = K), data = contour_df, colour = "grey20", bins = bins) +
+    theme_minimal()
+  pp
 }

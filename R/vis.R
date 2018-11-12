@@ -193,13 +193,14 @@ plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, exp
   
 }
 
+#' @import scico
 #' @export plot_K_contour
-plot_K_contour <- function(K_parms, x_lims = c(-1, 1), y_lims = c(-1, 1), contour_res = 100, bins = 8, ...) {
+plot_K_contour <- function(K_parms, x_lims = c(-1, 1), y_lims = c(-1, 1), contour_res = 100, bins = 8, cutoff = 0.01, ...) {
   contour_df <- crossing(Niche_Axis_1 = seq(x_lims[1], x_lims[2], length.out = contour_res),
                          Niche_Axis_2 = seq(y_lims[1], y_lims[2], length.out = contour_res))
   z <- apply(contour_df %>% as.matrix, 1, 
              function(y) K_func(y, h0 = K_parms$h0, 
-                                sig0i = K_parms$sigma0i, 
+                                sig0i = K_parms$sig0i, 
                                 P0i = K_parms$P0i,
                                 hz = K_parms$hz, 
                                 biz = K_parms$biz,
@@ -209,10 +210,14 @@ plot_K_contour <- function(K_parms, x_lims = c(-1, 1), y_lims = c(-1, 1), contou
                                 ...))
   
   contour_df <- contour_df %>%
-    mutate(K = z)
+    mutate(K = z) %>%
+    dplyr::filter(z > cutoff)
   
   pp <- ggplot(contour_df, aes(Niche_Axis_1, Niche_Axis_2)) +
+    geom_raster(aes(fill = K)) +
     geom_contour(aes(z = K), data = contour_df, colour = "grey20", bins = bins) +
+    scale_fill_scico(palette = "bilbao") +
+    coord_equal() +
     theme_minimal()
   pp
 }

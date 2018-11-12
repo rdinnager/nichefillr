@@ -7,7 +7,7 @@
 K_func(xi, h0 = 1, sig0i = c(5, 5), P0i = c(1.5, 1.5), hz = c(1, 1),
   biz = matrix(c(-1, -1, 1, 1), nrow = 2, ncol = 2), sigiz = matrix(c(1, 1,
   1, 1), nrow = 2, ncol = 2), Piz = matrix(c(1, 1, 1, 1), nrow = 2, ncol = 2),
-  a = 0.1)
+  a = 0.1, use_ellip = TRUE)
 }
 \arguments{
 \item{xi}{X values to evaluate under carrying capacity function; a vector of length d, 

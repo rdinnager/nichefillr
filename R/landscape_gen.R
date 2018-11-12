@@ -3,7 +3,7 @@
 #' Function to generate a random carrying capacity landscape obeying certain constraints. 
 #' It distributes peaks uniformly within an N-ball, which is approximated by the overall
 #' Super-gaussian multiplier distribution. Peak heights and widths are chosen to
-#' satisfy a particular ration and to add up to the total desired niche 'volume'.
+#' satisfy a particular ratio and to add up to the total desired niche 'volume'.
 #' 
 #' @param potent_vol Total potential volume of the entire landscape.
 #' @param total_vol Total approximate volume of the entire landscape.
@@ -27,9 +27,10 @@
 generate_landscape <- function(potent_vol = 1, total_vol = 1, num_peaks = 6, 
                                h_to_sig_ratio = 2, 
                                P_min_max = c(0.9, 1.1), dirichlet_param = 1.5,
-                               d = 2, P = 8, a_prop = 0.01) {
+                               d = 2, P = 8, a = 0.01) {
   norms <- matrix(rnorm(num_peaks*d), ncol = d)
-  unifs <- runif(num_peaks)
+  #unifs <- runif(num_peaks)
+  rexps <- rexp(num_peaks)
   
   ## use the equation for the volume of an N-ball to get radius equal to desired
   ## total volume
@@ -38,8 +39,13 @@ generate_landscape <- function(potent_vol = 1, total_vol = 1, num_peaks = 6,
   ## uniform radius equals unif(0, 1)*radius^(1/3)
   ## uniform within a unit sphere: x1, x2, x3 are three normal deviates (norm(0,1))
   ## (1/sum(xi^2))*c(x1,x2,x3)
-  sphere_points <- ((total_rad*(unifs^(1/3))) * norms) / 
-    apply(norms^2, 1, function(x) sqrt(sum(x)))
+  # sphere_points <- ((total_rad*(unifs^(1/3))) * norms) / 
+  #   apply(norms^2, 1, function(x) sqrt(sum(x)))
+  
+  sphere_points <- (total_rad * norms) / 
+    sqrt(rexps + apply(norms^2, 1, function(x) sum(x)))
+  
+  #plot(sphere_points)
   
   res <- list()
   
@@ -58,15 +64,111 @@ generate_landscape <- function(potent_vol = 1, total_vol = 1, num_peaks = 6,
   res$Piz <- matrix(runif(d*num_peaks, P_min_max[1], P_min_max[2]), nrow = d)
   res$sig0i <- rep(total_sig, d)
   res$P0i <- rep(P, d)
-  res$a <- a_prop * max(hs)
+  res$a <- 0
   
   integral <- integrate_fun(K_func, lower = rep(-total_rad*1, d), upper = rep(total_rad*1, d),
-                h0 = res$h0, sig0i = res$sig0i, P0i = res$P0i,
-                hz = res$hz, biz = res$biz,
-                sigiz = res$sigiz,
-                Piz = res$Piz, a = res$a)
+                            h0 = res$h0, sig0i = res$sig0i, P0i = res$P0i,
+                            hz = res$hz, biz = res$biz,
+                            sigiz = res$sigiz,
+                            Piz = res$Piz, a = res$a)
   
-  res$h0 <- res$h0 * (total_vol / integral)
+  
+  miss_vol <- total_vol - integral
+  res$a <- miss_vol / potent_vol
+  
+  #res$h0 <- res$h0 * (total_vol / integral)
+  
+  res$total_rad <- total_rad
+  res$potent_vol <- potent_vol
+  res$total_vol <- total_vol
+  
+  res$num_peaks = num_peaks 
+  res$h_to_sig_ratio = h_to_sig_ratio 
+  res$P_min_max = P_min_max
+  res$dirichlet_param = dirichlet_param
+  
+  res
+  
+}
+
+#' Generate a Random Carrying Capacity Landscape
+#' 
+#' Function to generate a random carrying capacity landscape obeying certain constraints. 
+#' It distributes peaks uniformly within an N-ball, which is approximated by the overall
+#' Super-gaussian multiplier distribution. Peak heights and widths are chosen to
+#' satisfy a particular ratio and to add up to the total desired niche 'volume'.
+#' 
+#' @param potent_vol Total potential volume of the entire landscape.
+#' @param total_vol Total approximate volume of the entire landscape.
+#' @param num_peaks Number of fitness peaks to place on the landscape.
+#' @param h_to_sig_ratio Ratio of the height of each peak to its width (or sigma value).
+#' @param P_min_max Vector of length 2 giving the minimum and maximum peak super-gaussian
+#' parameters to use.
+#' @param dirichlet_param The alpha parameter of the dircihlet distribution for 
+#' determining how the volume should be split between the peaks.
+#' @param d The number of dimensions of the landscape
+#' @param P Super-gaussian parameter for whole landscape multiplier
+#' @param a Minimum carrying capacity within the landscape
+#' 
+#' @return List of parameter values that can be used in the carrying capacity function
+#' to generate the landscape
+#' 
+#' @importFrom nimble rdirch
+#' 
+#' @export
+generate_landscape_simple <- function(potent_vol = 1, total_vol = 1, num_peaks = 6, 
+                               h_to_sig_ratio = 2, 
+                               P_min_max = c(0.9, 1.1), dirichlet_param = 1.5,
+                               d = 2, P = 8, a = 0.01) {
+  norms <- matrix(rnorm(num_peaks*d), ncol = d)
+  unifs <- runif(num_peaks)
+  exps <- rexp(num_peaks)
+  
+  ## use the equation for the volume of an N-ball to get radius equal to desired
+  ## total volume
+  total_rad <- (potent_vol / ((pi^(d/2))/(gamma((d/2)+1))))^(1/d)
+  
+  ## uniform radius equals unif(0, 1)*radius^(1/3)
+  ## uniform within a unit sphere: x1, x2, x3 are three normal deviates (norm(0,1))
+  ## (1/sum(xi^2))*c(x1,x2,x3)
+  # sphere_points <- ((total_rad*(unifs^(1/3))) * norms) / 
+  #   apply(norms^2, 1, function(x) sqrt(sum(x)))
+  
+  sphere_points <- (total_rad*norms) /
+    (exps + apply(norms^2, 1, function(x) sqrt(sum(x))))
+  
+  #plot(sphere_points)
+  
+  res <- list()
+  
+  vol_split <- rdirch(1, rep(dirichlet_param, num_peaks))
+  vols <- total_vol * vol_split
+  sigmas <- ((vols / (h_to_sig_ratio*((2 * pi)^((d/2))))))^(1/(d+1))
+  
+  hs <- sigmas * h_to_sig_ratio
+  ## use the full width at half maximum formula to guestimate sigma for total landscape super-gaussian
+  total_sig <- (2 * total_rad) / (2*((2*log(2))^(1/(2*P)))*sqrt(2))
+  
+  res$h0 <- 1
+  res$hz <- hs
+  res$biz <- t(sphere_points)
+  res$sigiz <- do.call(rbind, replicate(d, sigmas, simplify = FALSE))
+  res$Piz <- matrix(runif(d*num_peaks, P_min_max[1], P_min_max[2]), nrow = d)
+  res$sig0i <- rep(total_sig, d)
+  res$P0i <- rep(P, d)
+  res$a <- 0
+  
+  integral <- integrate_fun(K_func, lower = rep(-total_rad*1, d), upper = rep(total_rad*1, d),
+                            h0 = res$h0, sig0i = res$sig0i, P0i = res$P0i,
+                            hz = res$hz, biz = res$biz,
+                            sigiz = res$sigiz,
+                            Piz = res$Piz, a = res$a)
+  
+  
+  miss_vol <- total_vol - integral
+  res$a <- miss_vol / potent_vol
+  
+  #res$h0 <- res$h0 * (total_vol / integral)
   
   res$total_rad <- total_rad
   res$potent_vol <- potent_vol

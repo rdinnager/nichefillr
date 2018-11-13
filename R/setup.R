@@ -222,6 +222,7 @@ compile_sim_ellip <- function(showCompilerOutput = FALSE) {
         #beta_r[r] <- sum(exp(-beta_2_rz[r, ])*h_z[r])
         a_sum_r[r] <- sum(a_sum_rz[r, ]) + a + c_r[r]
       }
+      #print(c_r)
       #print("done_2")
       # Do r by i by z values
       

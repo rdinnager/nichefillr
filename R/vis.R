@@ -142,7 +142,7 @@ sim_animation <- function(sim_ob, file_name = NULL, view = FALSE, expand_factor 
 #' @import tidyr
 #' @import dplyr
 #' @export plot.nichfillr_sim
-plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, expand_factor = 0.1) {
+plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, expand_factor = 0.1, bins = 10) {
   message("Extracting trait history data from simulation (this might take awhile).... ")
   plot_df <- make_df_from_sim(x)
   extant_df <- t(x$sim_object$traits[ , x$sim_object$extant]) %>%
@@ -179,7 +179,9 @@ plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, exp
   message("Generating plot...")
   pp <- ggplot(plot_df, aes(Niche_Axis_1, Niche_Axis_2))
   if(fitness_contour) {
-    pp <- pp + geom_contour(aes(z = K), data = contour_df, colour = "grey")
+    pp <- pp + geom_raster(aes(fill = K), data = contour_df) + 
+      geom_contour(aes(z = K), data = contour_df, colour = "grey20", bins = bins) +
+      scale_fill_scico(palette = "bilbao")
   }
   pp <- pp +
     geom_point(aes(colour = Species, alpha = Time, size = Population)) +

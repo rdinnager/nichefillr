@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 .travis.yml
 tester.gif
+temp_test.R

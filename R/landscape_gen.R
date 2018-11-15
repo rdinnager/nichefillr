@@ -108,7 +108,8 @@ generate_landscape <- function(potent_vol = 1, total_vol = 1, num_peaks = 6,
 #' determining how the volume should be split between the peaks.
 #' @param d The number of dimensions of the landscape
 #' @param P Super-gaussian parameter for whole landscape multiplier
-#' @param a Minimum carrying capacity within the landscape
+#' @param a_prop Minimum carrying capacity within the landscape as a proportion of the maximum
+#' height
 #' 
 #' @return List of parameter values that can be used in the carrying capacity function
 #' to generate the landscape
@@ -116,17 +117,17 @@ generate_landscape <- function(potent_vol = 1, total_vol = 1, num_peaks = 6,
 #' @importFrom nimble rdirch
 #' 
 #' @export
-generate_landscape_simple <- function(potent_vol = 1, total_vol = 1, num_peaks = 6, 
+generate_landscape2 <- function(niche_vol = 1000, mean_h = 10, num_peaks = 100, 
                                h_to_sig_ratio = 2, 
                                P_min_max = c(0.9, 1.1), dirichlet_param = 1.5,
                                d = 2, P = 8, a = 0.01) {
   norms <- matrix(rnorm(num_peaks*d), ncol = d)
-  unifs <- runif(num_peaks)
-  exps <- rexp(num_peaks)
+  #unifs <- runif(num_peaks)
+  rexps <- rexp(num_peaks)
   
   ## use the equation for the volume of an N-ball to get radius equal to desired
   ## total volume
-  total_rad <- (potent_vol / ((pi^(d/2))/(gamma((d/2)+1))))^(1/d)
+  total_rad <- (niche_vol / ((pi^(d/2))/(gamma((d/2)+1))))^(1/d)
   
   ## uniform radius equals unif(0, 1)*radius^(1/3)
   ## uniform within a unit sphere: x1, x2, x3 are three normal deviates (norm(0,1))
@@ -134,14 +135,15 @@ generate_landscape_simple <- function(potent_vol = 1, total_vol = 1, num_peaks =
   # sphere_points <- ((total_rad*(unifs^(1/3))) * norms) / 
   #   apply(norms^2, 1, function(x) sqrt(sum(x)))
   
-  sphere_points <- (total_rad*norms) /
-    (exps + apply(norms^2, 1, function(x) sqrt(sum(x))))
+  sphere_points <- 0.9 * total_rad * (norms / 
+    sqrt(rexps + apply(norms^2, 1, function(x) sum(x))))
   
   #plot(sphere_points)
   
   res <- list()
   
   vol_split <- rdirch(1, rep(dirichlet_param, num_peaks))
+  total_vol <- niche_vol * mean_h
   vols <- total_vol * vol_split
   sigmas <- ((vols / (h_to_sig_ratio*((2 * pi)^((d/2))))))^(1/(d+1))
   
@@ -158,20 +160,26 @@ generate_landscape_simple <- function(potent_vol = 1, total_vol = 1, num_peaks =
   res$P0i <- rep(P, d)
   res$a <- 0
   
-  integral <- integrate_fun(K_func, lower = rep(-total_rad*1, d), upper = rep(total_rad*1, d),
+  integral <- integrate_fun(K_func, lower = rep(-total_rad*1.1, d), upper = rep(total_rad*1.1, d),
                             h0 = res$h0, sig0i = res$sig0i, P0i = res$P0i,
                             hz = res$hz, biz = res$biz,
                             sigiz = res$sigiz,
                             Piz = res$Piz, a = res$a)
   
+  mean_height <- integral / niche_vol
   
-  miss_vol <- total_vol - integral
-  res$a <- miss_vol / potent_vol
+  miss_h <- mean_h - mean_height
+  
+  vol_miss <- (miss_h - a) * niche_vol
+  
+  res$h0 <- res$h0 * ((integral + vol_miss)/ integral)
+  
+  res$a <- a
   
   #res$h0 <- res$h0 * (total_vol / integral)
   
-  res$total_rad <- total_rad
-  res$potent_vol <- potent_vol
+  res$niche_rad <- total_rad
+  res$niche_vol <- niche_vol
   res$total_vol <- total_vol
   
   res$num_peaks = num_peaks 
@@ -180,7 +188,6 @@ generate_landscape_simple <- function(potent_vol = 1, total_vol = 1, num_peaks =
   res$dirichlet_param = dirichlet_param
   
   res
-  
 }
 
 #' Visualize a Carrying Capacity Landscape using RGL
@@ -215,6 +222,44 @@ vis_K_landscape <- function(K_parms, total_rad) {
   
   open3d()
   surface3d(y1, x1, z1_mat, color = "green", back = "lines")
+  axes3d()
+}
+
+#' Visualize a Carrying Capacity Landscape using RGL
+#' 
+#' This function uses the R package \code{rgl} to visualize a carrying capacity lanscape 
+#' function. Currently only works for two-dimensional landscapes.
+#' 
+#' @param K_parms A names list of parameters describing the landscape; currently only
+#' excepts two dimensional landscapes
+#' 
+#' @return None
+#' 
+#' @import rgl
+#' 
+#' @export
+vis_K_landscape_3D <- function(K_parms, total_rad, reso = 100) {
+  
+  res <- K_parms
+  
+  if(dim(res$biz)[1] != 3) {
+    stop("error: vis_K_landscape_3D can only visualize three dimensional landscapes")
+  }
+  
+  x1 <- seq(-total_rad*1.5, total_rad*1.5, length.out = reso) 
+  y1 <- x1
+  a1 <- x1
+  z1 <- expand.grid(x1, y1, a1)
+  
+  z1_mat <- matrix(apply(z1, 1, function(x) K_func(x, h0 = res$h0, sig0i = res$sig0i, P0i = res$P0i,
+                                                   hz = res$hz, biz = res$biz,
+                                                   sigiz = res$sigiz,
+                                                   Piz = res$Piz, a = res$a)))
+  
+  z1_mat <- z1_mat/max(z1_mat)
+  
+  open3d()
+  points3d(z1, color = "red", size = z1_mat)
   axes3d()
 }
 

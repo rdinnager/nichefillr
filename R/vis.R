@@ -60,7 +60,7 @@ make_df_from_sim <- function(sim_ob) {
 #' shown)
 #' @param contour_res Resolution for the fitness contours, in terms of how many points per
 #' axis to calculate fitness for.
-#' @import magick 
+#' @import gganimate 
 #' @import tidyr 
 #' @import ggplot2
 #' @export sim_animation
@@ -218,6 +218,41 @@ plot_K_contour <- function(K_parms, x_lims = c(-1, 1), y_lims = c(-1, 1), contou
   pp <- ggplot(contour_df, aes(Niche_Axis_1, Niche_Axis_2)) +
     geom_raster(aes(fill = K)) +
     geom_contour(aes(z = K), data = contour_df, colour = "grey20", bins = bins) +
+    scale_fill_scico(palette = "bilbao") +
+    coord_equal() +
+    theme_minimal()
+  pp
+}
+
+#' @import scico
+#' @export plot_K_contour3D
+plot_K_contour3D <- function(K_parms, x_lims = c(-20, 20), y_lims = c(-20, 20), z_lims = c(-20, 20), contour_res = 100, bins = 8, cutoff = 0.01, slices = 9, facet_cols = 3, ...) {
+  
+  z_vals <- seq(z_lims[1], z_lims[2], length.out = slices)
+  
+  contour_df <- crossing(Niche_Axis_1 = seq(x_lims[1], x_lims[2], length.out = contour_res),
+                         Niche_Axis_2 = seq(y_lims[1], y_lims[2], length.out = contour_res),
+                         Niche_Axis_3 = z_vals)
+  z <- apply(contour_df %>% as.matrix, 1, 
+             function(y) K_func(y, h0 = K_parms$h0, 
+                                sig0i = K_parms$sig0i, 
+                                P0i = K_parms$P0i,
+                                hz = K_parms$hz, 
+                                biz = K_parms$biz,
+                                sigiz = K_parms$sigiz,
+                                Piz = K_parms$Piz, 
+                                a = K_parms$a#,
+                                #...
+                                ))
+  
+  contour_df <- contour_df %>%
+    mutate(K = z) %>%
+    dplyr::filter(z > cutoff)
+  
+  pp <- ggplot(contour_df, aes(Niche_Axis_1, Niche_Axis_2)) +
+    geom_raster(aes(fill = K)) +
+    geom_contour(aes(z = K), data = contour_df, colour = "grey20", bins = bins) +
+    facet_wrap(~Niche_Axis_3, ncol = facet_cols) + 
     scale_fill_scico(palette = "bilbao") +
     coord_equal() +
     theme_minimal()

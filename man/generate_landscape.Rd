@@ -6,7 +6,7 @@
 \usage{
 generate_landscape(potent_vol = 1, total_vol = 1, num_peaks = 6,
   h_to_sig_ratio = 2, P_min_max = c(0.9, 1.1), dirichlet_param = 1.5,
-  d = 2, P = 8, a_prop = 0.01)
+  d = 2, P = 8, a = 0.01)
 }
 \arguments{
 \item{potent_vol}{Total potential volume of the entire landscape.}

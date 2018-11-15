@@ -9,7 +9,7 @@ and ancestors (optionally). Currently only work for 2 dimensional simulations, e
 will work with higher dimensions through t-sne dimension reduction.}
 \usage{
 \method{plot}{nichfillr_sim}(x, fitness_contour = TRUE, contour_res = 100,
-  expand_factor = 0.1)
+  expand_factor = 0.1, bins = 10)
 }
 \description{
 Plot a \code{nichefillr_sim} object. If the simulation object contains a trait history,

@@ -6,12 +6,21 @@
 sim_radiation_multi <- function(parm_list, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01, ncpus = NULL, save_folder = NULL, save_prefix = "sim_", compress = "gz", return_sim = FALSE) {
   
   run_sim <- function(parms) {
+    gc()
+    
     rep <- parms[[2]]
-    sim <- try(sim_radiation(parms[[1]], save_tree = save_tree, progress = FALSE, trait_hist = trait_hist,
-                             trait_hist_prop = trait_hist_prop))
+    
     if(!is.null(save_folder)) {
-      file_name <- paste0(save_folder, "/", save_prefix, rep, "_", gsub(":", "-", gsub(" ", "_", Sys.time())), ".rds")
-      write_rds(sim, file_name, compress = compress)
+      file_name <- paste0(save_folder, "/", save_prefix, rep, ".rds")
+      if(!file.exists(file_name)) {
+        sim <- try(sim_radiation(parms[[1]], save_tree = save_tree, progress = FALSE, trait_hist = trait_hist,
+                                 trait_hist_prop = trait_hist_prop))
+        write_rds(sim, file_name, compress = compress)
+      }
+      
+    } else {
+      sim <- try(sim_radiation(parms[[1]], save_tree = save_tree, progress = FALSE, trait_hist = trait_hist,
+                               trait_hist_prop = trait_hist_prop))
     }
   }
    if(!is.null(ncpus)) {

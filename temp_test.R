@@ -134,17 +134,10 @@ drifter <- nimbleFunction(
   run = function(state = double(1), V_gi = double(1), d = integer(0), m = integer(0), demo = double(0)) {
     drift_state <- numeric(length = length(state), value = 0, init = TRUE)
     N <- state[(d*m+1):(d*m+m)]
-    Tr <- matrix(value = 0, nrow = m, ncol = d, init = TRUE, type = "double")
-    #drift_Tr <- matrix(value = 0, nrow = m, ncol = d, init = TRUE, type = "double")
     drift_N <- demo*N
     for (r in 1:m){
       for(i in 1:d){
-        ## trait states are arranged to vary by dimension first, then species
-        p1 <- state[d * (r - 1) + i] ## get the right trait value from the state vector
-        Tr[r, i] <- p1 ## put it into a matrix for later use
-        #drift_Tr[r, i] <- 
-        drift_state[d * (r - 1) + i] <- V_gi[i]/(2*N[r])
-        #b4_ri[r, i] <- p1 / (sigma[i]^2)
+        drift_state[d * (r - 1) + i] <- 2*V_gi[i]
       }
       drift_state[(m * d + r)] <- demo*N[r]
     }
@@ -196,12 +189,19 @@ drifter_int <- function(y, parms, t) {
 }
 
 drifter_int(state, parms2, 0)
-tspan <- list(0.0,100.0)
+tspan <- list(0.0,5000.0)
 sol2 = diffeqr::sde.solve(flipper,
                          drifter_int,
                          state,
                          tspan,
                          p = parms2)
+
+udf = as.data.frame(sol2$u)
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V5, type = 'scatter3d', mode = 'lines')
+plotly::plot_ly(udf, x = ~V3, y = ~V4, z = ~V6, type = 'scatter3d', mode = 'lines')
+
+plot(udf$V1, udf$V2, type = "l", col = "red", xlim = c(-7, 7), ylim = c(-7, 7))
+points(udf$V3, udf$V4, type = "l", col = "blue")
 
 
 f <- function(u,p,t) {
@@ -214,9 +214,9 @@ g <- function(u,p,t) {
   return(c(0.3*u[1],0.3*u[2],0.3*u[3]))
 }
 u0 = c(1.0,0.0,0.0)
-tspan <- list(0.0,1.0)
+tspan <- list(0.0,100.0)
 p = c(10.0,28.0,8/3)
 sol = diffeqr::sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
 udf = as.data.frame(sol$u)
-plotly::plot_ly(x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 

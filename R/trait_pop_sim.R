@@ -124,3 +124,96 @@ generate_landscape_old <- function(u = 2, h_mean = 1, h_var = 0.5, bi_mean = c(0
   list(h0 = h0, hz = hz, biz = biz, sigiz = sigiz, Piz = Piz, sig0i = sig0i, P0i = P0i, a = a)
   
 }
+
+diffeqr_selection_interface <- function(y, parms2, t) {
+  scalar_len <- 8
+  peaks <- as.integer(parms2[3])
+  dims <- as.integer(parms2[1])
+  peaks_len <- peaks + peaks + dims*peaks + dims*peaks
+  dims_len <- dims + dims + dims
+  specs <- as.integer(parms2[2])
+  specs_len <- specs
+  parms <- list()
+  parms$d <- as.integer(parms2[1])
+  parms$m <- as.integer(parms2[2])
+  parms$u <- as.integer(parms2[3])
+  parms$a <- parms2[4]
+  parms$h0 <- parms2[5]
+  parms$P0 <- parms2[6]
+  parms$D0 <- parms2[7] 
+  parms$C <- parms2[8]
+  spot <- 9
+  spot2 <- spot + peaks - 1
+  parms$h_z <- parms2[spot:spot2]
+  spot <- spot2 + 1
+  spot2 <- spot2 + peaks
+  parms$P_z <- parms2[spot:spot2] 
+  spot <- spot2 + 1
+  spot2 <- spot2 + peaks*dims
+  parms$b_iz <- matrix(parms2[spot:spot2], nrow = dims, ncol = peaks)
+  spot <- spot2 + 1
+  spot2 <- spot2 + peaks*dims
+  parms$sigma_iz <- matrix(parms2[spot:spot2], nrow = dims, ncol = peaks)
+  spot <- spot2 + 1
+  spot2 <- spot2 + dims
+  parms$sigma0_i <- parms2[spot:spot2]
+  spot <- spot2 + 1
+  spot2 <- spot2 + dims
+  parms$V_gi <- parms2[spot:spot2]
+  spot <- spot2 + 1
+  spot2 <- spot2 + dims
+  parms$gamma_i <- parms2[spot:spot2]
+  spot <- spot2 + 1
+  spot2 <- spot2 + specs
+  parms$c_r <- parms2[spot:spot2]
+  #print(parms)
+  
+  pkg.env$adapt_landscape_comp_dyn_cmp(d = parms$d, m = parms$m, u = parms$u, 
+                                       a = parms$a, h0 = parms$h0,
+                                       h_z = parms$h_z,
+                                       P0_i = parms$P0_i, sigma0_i = parms$sigma0_i,
+                                       P_iz = parms$P_iz, D_i = parms$D_i,
+                                       b_iz = parms$b_iz, state = y, 
+                                       V_gi = parms$V_gi,
+                                       sigma_iz = parms$sigma_iz, gamma_i = parms$gamma_i,
+                                       c_r = parms$c_r, C = parms$C)
+  
+  #res <- nichefillr:::trait_pop_sim_de_ellip(t, y, parms)
+  res
+}
+
+diffeqr_drift_interface <- function(y, parms, t) {
+  scalar_len <- 8
+  peaks <- as.integer(parms2[3])
+  dims <- as.integer(parms2[1])
+  peaks_len <- peaks + peaks + dims*peaks + dims*peaks
+  dims_len <- dims + dims + dims
+  specs <- as.integer(parms2[2])
+  specs_len <- specs
+  parms <- list()
+  parms$d <- as.integer(parms2[1])
+  parms$m <- as.integer(parms2[2])
+  
+  spot <- 9
+  spot2 <- spot + peaks - 1
+  
+  spot <- spot2 + 1
+  spot2 <- spot2 + peaks
+  
+  spot <- spot2 + 1
+  spot2 <- spot2 + peaks*dims
+  
+  spot <- spot2 + 1
+  spot2 <- spot2 + peaks*dims
+  
+  spot <- spot2 + 1
+  spot2 <- spot2 + dims
+  
+  spot <- spot2 + 1
+  spot2 <- spot2 + dims
+  parms$V_gi <- parms2[spot:spot2]
+  
+  parms$demo <- 0.1
+  pkg.env$drift_cmp(y, parms$V_gi, parms$d, parms$m, parms$demo)
+  
+}

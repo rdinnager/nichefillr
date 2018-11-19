@@ -83,11 +83,12 @@
 #' @return A niche_fill_sim object containing the final simulation object,
 #' a set of intermediate phylogenies, and the parameters used to run the simulation
 #' 
-#' @importFrom deSolve ode
+#' @importFrom diffeqr ode.solve sde.solve
 #' @import progress
 #' 
 #' @export
-sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01) {
+sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01,
+                          stochastic = TRUE) {
   
   params <- list(K_parms = parms$K_parms, a_parms = parms$a_parms, b_rate = parms$macro_parms$b_rate, 
                  init_traits = parms$macro_parms$init_traits, e_var = parms$macro_parms$e_var, 
@@ -96,7 +97,8 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
                  V_gi = parms$macro_parms$V_gi, c_var = parms$K_parms$c_var, C = parms$a_parms$C,
                  m = parms$macro_parms$m, d = parms$macro_parms$d, 
                  save_tree = save_tree, progress = progress, mult = parms$macro_parms$mult,
-                 trait_hist = trait_hist, trait_hist_prop = trait_hist_prop)
+                 trait_hist = trait_hist, trait_hist_prop = trait_hist_prop,
+                 demo = parms$macro_parms$demo)
   
   tree_ob <- make_tree_ob(b_rate = params$b_rate, params$init_traits, 
                           params$e_var, init_Ns = params$init_Ns, 
@@ -106,7 +108,8 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
   
   t <- 0
   result <- list(sim_object = sim_radiation_single(t, params, tree_ob, save_tree = save_tree, progress = progress,
-                                 trait_hist = trait_hist, trait_hist_prop = trait_hist_prop),
+                                 trait_hist = trait_hist, trait_hist_prop = trait_hist_prop,
+                                 stochastic = stochastic),
                  sim_params = parms, other_params = list(save_tree = save_tree, 
                                                          progress = progress,
                                                          trait_hist = trait_hist, 
@@ -116,7 +119,7 @@ sim_radiation <- function(parms, save_tree = TRUE, progress = TRUE, trait_hist =
   
 }
 
-sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01, arrest_speciation = FALSE, use_ellip = TRUE) {
+sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress = TRUE, trait_hist = TRUE, trait_hist_prop = 0.01, arrest_speciation = FALSE, use_ellip = TRUE, stochastic = TRUE) {
   
   if(use_ellip) {
     trait_pop_sim_de <- trait_pop_sim_de_ellip
@@ -136,7 +139,7 @@ sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress 
                       b_iz = params$K_parms$biz, 
                       V_gi = params$V_gi,
                       sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i,
-                      C = params$C)
+                      C = params$C, demo = params$demo)
   } else {
   
     ode_parms <- list(d = params$d, m = params$m, u = length(params$K_parms$hz), 
@@ -147,7 +150,7 @@ sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress 
                       b_iz = params$K_parms$biz, 
                       V_gi = params$V_gi,
                       sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i,
-                      C = params$C)
+                      C = params$C, demo = params$demo)
   }
   
   event_vec <- c(birth = tree_ob$b_rate, check_extinct = params$check_extinct)  
@@ -188,7 +191,12 @@ sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress 
       ## run ODE
       #print(tree_ob$Ns)
       
-      next_ode <- ode(ode_init, 1:floor(next_event), trait_pop_sim_de, ode_parms)
+      tspan <- list(1: floor(next_event))
+      if(stochastic) {
+        next_ode <- sde.solve(diffeqr_selection_interface, diffeqr_drift_interface, ode_init, tspan, p = ode_parms)
+      } else {
+        next_ode <- ode.solve(diffeqr_selection_interface, ode_init, tspan, p = ode_parms)
+      }
       tree_ob <- update_br_lens(tree_ob, next_event, 0)
       
       #print(tree_ob$Ns)
@@ -262,7 +270,6 @@ sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress 
 #' @return A niche_fill_sim object containing the final simulation object,
 #' a set of intermediate phylogenies, and the parameters used to run the simulation
 #' 
-#' @importFrom deSolve ode
 #' @import progress
 #' 
 #' @export

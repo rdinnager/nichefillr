@@ -7,13 +7,18 @@ make_df_from_sim <- function(sim_ob) {
   
   full_dat <- sim_ob$sim_object$full_dat$as.list()
   extant_list <- sim_ob$sim_object$extant_list$as.list()
-  #tree_ob$tree_list <- tree_ob$tree_list$as.list()
+  tree_list <- sim_ob$sim_object$tree_list$as.list()
+  
+  tip_names <- mapply(function(x, y) x$tip.label[y], tree_list, extant_list)
   
   ms <- sapply(extant_list[!sapply(extant_list, is.null)], length)
   d <- length(sim_ob$sim_params$K_parms$sig0i)
   
-  # trait_mat <- sim_ob$sim_object$full_dat[[1]]
-  trait_mat_as_df <- function(trait_mat, d, m) {
+  # trait_mat <- full_dat[[1]]
+  # tree <- tree_list[[1]]
+  # m <- ms[1]
+  
+  trait_mat_as_df <- function(trait_mat, tip_name, d, m) {
     if(is.null(dim(trait_mat))) {
       trait_mat <- rbind(NULL, trait_mat)
     }
@@ -26,18 +31,20 @@ make_df_from_sim <- function(sim_ob) {
       separate(spectrait, c("junk", "spec", "trait"), "_") %>%
       select(-junk) %>%
       spread("trait", "val") %>%
-      transform(spec = paste0("Species_", spec))
+      transform(spec = tip_name[as.numeric(spec)])
     colnames(traits) <- c("Time", "Species", paste0("Niche_Axis_", 1:d))
     pops <- trait_mat %>%
       select(Time, starts_with("pop_")) %>%
       gather(Species, Population, -Time) %>%
-      transform(Species = gsub("pop_", "Species_", Species))
+      transform(Species = gsub("pop_", "", Species)) %>%
+      transform(Species = tip_name[as.numeric(Species)])
     
     new_df <- traits %>%
       left_join(pops, by = c("Time", "Species"))
   }
   
-  full_df <- mapply(trait_mat_as_df, full_dat[!sapply(full_dat, is.null)], 
+  full_df <- mapply(trait_mat_as_df, full_dat[!sapply(full_dat, is.null)],
+                    tip_names[!sapply(full_dat, is.null)],
                     d, ms, SIMPLIFY = FALSE) 
   
   for(i in 2:length(full_df)) {
@@ -94,6 +101,73 @@ sim_animation <- function(sim_ob, file_name = NULL, view = FALSE, expand_factor 
   contour_df <- contour_df %>%
     mutate(K = z)
   
+  trail <- 500
+  Time <- unique(plot_df$Time)[1000]
+  make_frame <- function(Time) {
+    plot_dat <- plot_df[plot_df$Time == Time, ]
+    prev_plot <- plot_df[plot_df$Time < Time & plot_df$Time > (Time - trail), ]
+    pp <- ggplot(plot_dat, aes(Niche_Axis_1, Niche_Axis_2)) +
+      ylim(y_lims) +
+      xlim(x_lims) +
+      scale_size_area(limits = pop_lims)  
+    pp <- pp + geom_raster(aes(fill = K), alpha = 0.9, data = contour_df) + 
+        geom_contour(aes(z = K), data = contour_df, colour = "grey20", bins = 12,
+                     size = 0.2) +
+        scale_fill_scico(palette = "bilbao", end = 0.85)
+   
+    
+    pp <- pp +
+        geom_path(aes(group = Species), alpha = 0.25, size = 0.2, colour = "black", data = prev_plot) +
+        geom_point(aes(size = Population)) +
+      coord_equal() +
+        theme_void() +
+        theme(legend.position = "none",
+              panel.grid = element_blank()) 
+    
+    outfil <- file.path("temp",
+                        sprintf("plot1_%02f.png", Time))
+    ggsave(outfil, width = 4, height = 4)
+  }  
+  
+  Times <- unique(plot_df$Time)
+  max(Times)
+  num_frames <- 3000
+  #wid <- max(Times) / num_frames
+  interval <- cut_interval(Times, num_frames)
+  time_df <- data_frame(Times = Times, interval = interval) %>%
+    group_by(interval) %>%
+    summarise(Times = Times[1])
+  reduced_times <- time_df$Times
+  frames <- pblapply(reduced_times, make_frame)
+  
+  frame_files <- list.files("temp")
+  frame_nums <- sapply(strsplit(frame_files, "_", fixed = TRUE), function(x) x[2])
+  frame_nums <- as.numeric(frame_nums <- gsub(".png", "", frame_nums))
+  frame_files <- list.files("temp", full.names = TRUE)[order(frame_nums)]
+  
+  delay <- 20 / num_frames
+  
+  gifski::gifski(frame_files, width = 600, height = 600, delay = delay)
+  
+  anim <- ggplot(plot_df) + 
+    #geom_contour(aes(z = K), data = contour_df, colour = "grey") +
+    #geom_tile(aes(x = Niche_axis_1, y = Niche_axis_2, fill = K), data = contour_df) +
+    geom_contour(aes(Niche_axis_1, Niche_axis_2, z = K), data = contour_df, colour = "grey") +
+    geom_point(aes(Niche_Axis_1, Niche_Axis_2, size = Population), stroke = 1.1) +
+    transition_components(Species, Time) +
+    shadow_wake(0.005, size = FALSE) +
+    ease_aes('linear') +
+    view_follow() +
+    #geom_contour(aes(Niche_Axis_1, Niche_Axis_2, z = K), data = contour_df, colour = "grey", inherit.aes = FALSE) +
+    scale_fill_scico(palette = "bilbao") +
+    #ylim(y_lims) +
+    #xlim(x_lims) +
+    #scale_size_continuous(limits = pop_lims)  +
+    theme_minimal()
+  
+  plot(anim)
+  animate(anim, 4000)
+  
   #single_df <- plot_df %>% filter(Time == 1)
   draw_single_plot <- function(single_df, x_lims, y_lims, pop_lims) {
     p <- ggplot(single_df, aes(Niche_Axis_1, Niche_Axis_2)) +
@@ -142,14 +216,30 @@ sim_animation <- function(sim_ob, file_name = NULL, view = FALSE, expand_factor 
 #' @import tidyr
 #' @import dplyr
 #' @export plot.nichfillr_sim
-plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, expand_factor = 0.1, bins = 10) {
+plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, expand_factor = 0.1, bins = 10, type = c("pollock", "trace"), trace_alpha = 0.5, trace_size = 0.2, trace_colour = "black", raster_alpha = 0.8) {
   message("Extracting trait history data from simulation (this might take awhile).... ")
   plot_df <- make_df_from_sim(x)
+  
+  # if(type == "trace") {
+  #   plot_df <- plot_df %>%
+  #     tween_appear("Time", nframes = 10000)
+  # }
+  
+  species <- rev(unique(plot_df$Species))
+  
+  plot_df <- plot_df 
+  
   extant_df <- t(x$sim_object$traits[ , x$sim_object$extant]) %>%
     as.data.frame() %>%
     rename(Niche_Axis_1 = V1, Niche_Axis_2 = V2) %>%
-    mutate(Species = paste0("Species_", 1:sum(x$sim_object$extant)),
+    mutate(Species = x$sim_object$phylo$tip.label[x$sim_object$extant],
            Population = x$sim_object$Ns[x$sim_object$extant]) 
+  
+  extinct_df <- t(x$sim_object$traits[ , !x$sim_object$extant]) %>%
+    as.data.frame() %>%
+    rename(Niche_Axis_1 = V1, Niche_Axis_2 = V2) %>%
+    mutate(Species = x$sim_object$phylo$tip.label[!x$sim_object$extant],
+           Population = x$sim_object$Ns[!x$sim_object$extant]) 
   
   x_lims <- c(min(plot_df$Niche_Axis_1), max(plot_df$Niche_Axis_1))
   y_lims <- c(min(plot_df$Niche_Axis_2), max(plot_df$Niche_Axis_2))
@@ -179,16 +269,38 @@ plot.nichfillr_sim <- function(x, fitness_contour = TRUE, contour_res = 100, exp
   message("Generating plot...")
   pp <- ggplot(plot_df, aes(Niche_Axis_1, Niche_Axis_2))
   if(fitness_contour) {
-    pp <- pp + geom_raster(aes(fill = K), data = contour_df) + 
+    pp <- pp + geom_raster(aes(fill = K), alpha = raster_alpha, data = contour_df) + 
       geom_contour(aes(z = K), data = contour_df, colour = "grey20", bins = bins) +
       scale_fill_scico(palette = "bilbao")
   }
+  if(type == "pollock") {
   pp <- pp +
     geom_point(aes(colour = Species, alpha = Time, size = Population)) +
     geom_point(aes(size = Population), data = extant_df, shape = 21, fill = NA) +
     scale_size_area() +
     coord_equal() +
     theme_minimal()
+  } 
+  if(type == "trace") {
+    
+    pp <- pp +
+      geom_path(aes(group = Species), alpha = trace_alpha, size = trace_size, colour = trace_colour) +
+      geom_text(label = "X", alpha = trace_alpha, colour = trace_colour, data = extinct_df) +
+      geom_point(aes(colour = Species, size = Population), data = extant_df) +
+      geom_point(aes(size = Population), data = extant_df, shape = 21, fill = NA) +
+      coord_equal() +
+      theme_minimal() +
+      theme(legend.position = "none") 
+    
+
+    # pp <- pp +
+    #   geom_point(colour = "blue", alpha = 0.05, size = 0.1) +
+    #   geom_point(aes(colour = Species, size = Population), data = extant_df) +
+    #   geom_point(aes(size = Population), data = extant_df, shape = 21, fill = NA) +
+    #   coord_equal() +
+    #   theme_minimal() +
+    #   theme(legend.position = "none")
+  }
   
   
   pp #theme_void() + theme(legend.position = "none")

@@ -140,6 +140,51 @@ sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress 
                       V_gi = params$V_gi,
                       sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i,
                       C = params$C, demo = params$demo)
+    
+    scalar_len <- 8
+    peaks <- ode_parms$u
+    dims <- ode_parms$d
+    peaks_len <- peaks + peaks + dims*peaks + dims*peaks
+    dims_len <- dims + dims + dims
+    specs <- ode_parms$m
+    specs_len <- specs
+    parms2 <- numeric(length = scalar_len + peaks_len + dims_len + specs_len)
+    parms2[1] <- ode_parms$d
+    parms2[2] <- ode_parms$m
+    parms2[3] <- length(ode_parms$h_z)
+    parms2[4] <- ode_parms$a
+    parms2[5] <- ode_parms$h0
+    parms2[6] <- ode_parms$P0
+    parms2[7] <- ode_parms$D0
+    parms2[8] <- ode_parms$C
+    
+    spot <- 9
+    spot2 <- spot + peaks - 1
+    parms2[spot:spot2] <- ode_parms$h_z
+    spot <- spot2 + 1
+    spot2 <- spot2 + peaks
+    parms2[spot:spot2] <- ode_parms$P_z
+    spot <- spot2 + 1
+    spot2 <- spot2 + peaks*dims
+    parms2[spot:spot2] <- as.vector(ode_parms$b_iz)
+    spot <- spot2 + 1
+    spot2 <- spot2 + peaks*dims
+    parms2[spot:spot2] <- as.vector(ode_parms$sigma_iz)
+    spot <- spot2 + 1
+    spot2 <- spot2 + dims
+    parms2[spot:spot2] <- ode_parms$sigma0_i
+    spot <- spot2 + 1
+    spot2 <- spot2 + dims
+    parms2[spot:spot2] <- ode_parms$V_gi
+    spot <- spot2 + 1
+    spot2 <- spot2 + dims
+    parms2[spot:spot2] <- ode_parms$gamma_i
+    spot <- spot2 + 1
+    # spot2 <- spot2 + specs
+    # parms2[spot:spot2] <- rep(ode_parms$c_var, ode_parms$m)
+    
+    ode_parms <- parms2
+    
   } else {
   
     ode_parms <- list(d = params$d, m = params$m, u = length(params$K_parms$hz), 
@@ -151,6 +196,49 @@ sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress 
                       V_gi = params$V_gi,
                       sigma_iz = params$K_parms$sigiz, gamma_i = params$a_parms$gamma_i,
                       C = params$C, demo = params$demo)
+    scalar_len <- 8
+    peaks <- ode_parms$u
+    dims <- ode_parms$d
+    peaks_len <- peaks + peaks + dims*peaks + dims*peaks
+    dims_len <- dims + dims + dims
+    specs <- ode_parms$m
+    specs_len <- specs
+    parms2 <- numeric(length = scalar_len + peaks_len + dims_len + specs_len)
+    parms2[1] <- ode_parms$d
+    parms2[2] <- ode_parms$m
+    parms2[3] <- length(ode_parms$h_z)
+    parms2[4] <- ode_parms$a
+    parms2[5] <- ode_parms$h0
+    parms2[6] <- ode_parms$P0
+    parms2[7] <- ode_parms$D0
+    parms2[8] <- ode_parms$C
+    
+    spot <- 9
+    spot2 <- spot + peaks - 1
+    parms2[spot:spot2] <- ode_parms$h_z
+    spot <- spot2 + 1
+    spot2 <- spot2 + peaks
+    parms2[spot:spot2] <- ode_parms$P_z
+    spot <- spot2 + 1
+    spot2 <- spot2 + peaks*dims
+    parms2[spot:spot2] <- as.vector(ode_parms$b_iz)
+    spot <- spot2 + 1
+    spot2 <- spot2 + peaks*dims
+    parms2[spot:spot2] <- as.vector(ode_parms$sigma_iz)
+    spot <- spot2 + 1
+    spot2 <- spot2 + dims
+    parms2[spot:spot2] <- ode_parms$sigma0_i
+    spot <- spot2 + 1
+    spot2 <- spot2 + dims
+    parms2[spot:spot2] <- ode_parms$V_gi
+    spot <- spot2 + 1
+    spot2 <- spot2 + dims
+    parms2[spot:spot2] <- ode_parms$gamma_i
+    spot <- spot2 + 1
+    # spot2 <- spot2 + specs
+    # parms2[spot:spot2] <- rep(ode_parms$c_var, ode_parms$m)
+    
+    ode_parms <- parms2
   }
   
   event_vec <- c(birth = tree_ob$b_rate, check_extinct = params$check_extinct)  
@@ -179,10 +267,10 @@ sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress 
     ## setup adaptive dynamics -----------------------------------------------
     
     if(floor(next_event) > 1) {
-      ode_parms$m <- sum(tree_ob$extant)
+      ode_parms[2] <- sum(tree_ob$extant)
       
       ## carrying capacity deviates for each species
-      ode_parms$c_r <- rnorm(ode_parms$m, 0, params$c_var) 
+      #ode_parms$c_r <- rnorm(ode_parms$m, 0, params$c_var) 
       
       ode_init <- c(as.vector(tree_ob$traits[ , tree_ob$extant]), tree_ob$Ns[tree_ob$extant])
       #test_fun <- adapt_landscape_comp_dyn_de(1, ode_init, ode_parms)
@@ -191,18 +279,19 @@ sim_radiation_single <- function(t, params, tree_ob, save_tree = TRUE, progress 
       ## run ODE
       #print(tree_ob$Ns)
       
-      tspan <- list(1: floor(next_event))
+      tspan <- list(1, floor(next_event))
       if(stochastic) {
         next_ode <- sde.solve(diffeqr_selection_interface, diffeqr_drift_interface, ode_init, tspan, p = ode_parms)
       } else {
         next_ode <- ode.solve(diffeqr_selection_interface, ode_init, tspan, p = ode_parms)
       }
+      next_ode <- cbind(next_ode$t, next_ode$u)
       tree_ob <- update_br_lens(tree_ob, next_event, 0)
       
       #print(tree_ob$Ns)
       
-      tree_ob$traits[ , tree_ob$extant] <- matrix(next_ode[nrow(next_ode), -c(1, (ncol(next_ode) - ode_parms$m + 1):ncol(next_ode))], nrow = ode_parms$d)
-      tree_ob$Ns[tree_ob$extant] <- next_ode[nrow(next_ode), c((ncol(next_ode) - ode_parms$m + 1):ncol(next_ode))]
+      tree_ob$traits[ , tree_ob$extant] <- matrix(next_ode[nrow(next_ode), -c(1, (ncol(next_ode) - ode_parms[2] + 1):ncol(next_ode))], nrow = ode_parms[1])
+      tree_ob$Ns[tree_ob$extant] <- next_ode[nrow(next_ode), c((ncol(next_ode) - ode_parms[2] + 1):ncol(next_ode))]
       
       #print(tree_ob$Ns)
       

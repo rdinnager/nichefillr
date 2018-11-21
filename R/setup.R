@@ -26,7 +26,7 @@ compile_sim_ellip <- function(showCompilerOutput = FALSE) {
                    b_iz = double(2),
                    state = double(1), V_gi = double(1),
                    sigma_iz = double(2), gamma_i = double(1),
-                   c_r = double(1), C = double(0)) {
+                   C = double(0)) {
       
       new_state <- numeric(length = length(state), value = 0, init = TRUE)
       N <- state[(d*m+1):(d*m+m)]
@@ -78,7 +78,7 @@ compile_sim_ellip <- function(showCompilerOutput = FALSE) {
           a_sum_rz[r, z] <- exp(-beta_2_rz[r, z])*h_z[z]
         }
         #beta_r[r] <- sum(exp(-beta_2_rz[r, ])*h_z[r])
-        a_sum_r[r] <- sum(a_sum_rz[r, ]) + a + c_r[r]
+        a_sum_r[r] <- sum(a_sum_rz[r, ]) + a 
       }
       #print(c_r)
       #print("done_2")

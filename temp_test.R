@@ -220,3 +220,15 @@ sol = diffeqr::sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 
+
+######## test new SDE version of nichefillr #########
+library(diffeqr)
+diffeq_setup()
+library(nichefillr)
+data("example_parms")
+
+example_parms$macro_parms$demo <- 0.2
+example_parms$macro_parms$tot_time <- 50000
+
+test <- sim_radiation(example_parms, trait_hist_prop = 0.25)
+plot(test, type = "trace")

@@ -5,7 +5,7 @@
 \title{Main Niche Filling Simulation Function}
 \usage{
 sim_radiation(parms, save_tree = TRUE, progress = TRUE, trait_hist = TRUE,
-  trait_hist_prop = 0.01)
+  trait_hist_prop = 0.01, stochastic = TRUE)
 }
 \arguments{
 \item{parms}{A named list containing three named list elements:

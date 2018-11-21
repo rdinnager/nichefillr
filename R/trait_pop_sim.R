@@ -84,6 +84,34 @@ K_func <- function(xi, h0 = 1, sig0i = c(5, 5), P0i = c(1.5, 1.5),
   term_1*term_2  
 }
 
+#' @export
+fit_func <- function(x, K_parms, a_parms, spec_traits, spec_Ns, res_x, d = 2) {
+  
+  spec_traits <- cbind(spec_traits, res_x)
+  spec_Ns <- c(spec_Ns, K_func(res_x, h0 = K_parms$h0, 
+                               sig0i = K_parms$sig0i, 
+                               P0i = K_parms$P0i,
+                               hz = K_parms$hz, 
+                               biz = K_parms$biz,
+                               sigiz = K_parms$sigiz,
+                               Piz = K_parms$Piz, 
+                               a = K_parms$a))
+  
+  xmat <- apply(spec_traits, 2, function(y) (((y - x)^2) / (2 * a_parms$gamma_i))^a_parms$D_i[1]) 
+  comp <- exp(-apply(xmat, 2, sum)) * spec_Ns
+  
+  fitness <- 1 - ((sum(comp)) / K_func(x, h0 = K_parms$h0, 
+                         sig0i = K_parms$sig0i, 
+                         P0i = K_parms$P0i,
+                         hz = K_parms$hz, 
+                         biz = K_parms$biz,
+                         sigiz = K_parms$sigiz,
+                         Piz = K_parms$Piz, 
+                         a = K_parms$a))
+  
+  fitness
+}
+
 #' Generate Random Carrying Capacity Landscape
 #' 
 #' Function to generate a random carrying capacity landscape as a mix of super-gaussians
@@ -163,26 +191,26 @@ diffeqr_selection_interface <- function(y, parms2, t) {
   spot <- spot2 + 1
   spot2 <- spot2 + dims
   parms$gamma_i <- parms2[spot:spot2]
-  spot <- spot2 + 1
-  spot2 <- spot2 + specs
-  parms$c_r <- parms2[spot:spot2]
+  # spot <- spot2 + 1
+  # spot2 <- spot2 + specs
+  # parms$c_r <- parms2[spot:spot2]
   #print(parms)
   
-  pkg.env$adapt_landscape_comp_dyn_cmp(d = parms$d, m = parms$m, u = parms$u, 
+  pkg.env$adapt_landscape_comp_dyn_cmp_ellip(d = parms$d, m = parms$m, u = parms$u, 
                                        a = parms$a, h0 = parms$h0,
                                        h_z = parms$h_z,
-                                       P0_i = parms$P0_i, sigma0_i = parms$sigma0_i,
-                                       P_iz = parms$P_iz, D_i = parms$D_i,
+                                       P0 = parms$P0, sigma0_i = parms$sigma0_i,
+                                       P_z = parms$P_z, D0 = parms$D0,
                                        b_iz = parms$b_iz, state = y, 
                                        V_gi = parms$V_gi,
                                        sigma_iz = parms$sigma_iz, gamma_i = parms$gamma_i,
-                                       c_r = parms$c_r, C = parms$C)
+                                       C = parms$C)
   
   #res <- nichefillr:::trait_pop_sim_de_ellip(t, y, parms)
-  res
+  
 }
 
-diffeqr_drift_interface <- function(y, parms, t) {
+diffeqr_drift_interface <- function(y, parms2, t) {
   scalar_len <- 8
   peaks <- as.integer(parms2[3])
   dims <- as.integer(parms2[1])

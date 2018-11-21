@@ -71,12 +71,16 @@ make_df_from_sim <- function(sim_ob) {
 #' @import tidyr 
 #' @import ggplot2
 #' @export sim_animation
-sim_animation <- function(sim_ob, file_name = NULL, view = FALSE, expand_factor = 0.1, contour_res = 25, height = 300, width = 400, res = 72) {
+sim_animation <- function(sim_ob, temp_folder = tempdir(), file_name = NULL, x_lims = NULL, y_lims = NULL, view = FALSE, expand_factor = 0.1, contour_res = 25, height = 300, width = 400, res = 72, num_frames = 1000, include_phylogeny = FALSE) {
   message("Extracting trait history data from simulation (this might take awhile).... ")
   plot_df <- make_df_from_sim(sim_ob)
   
-  x_lims <- c(min(plot_df$Niche_Axis_1), max(plot_df$Niche_Axis_1))
-  y_lims <- c(min(plot_df$Niche_Axis_2), max(plot_df$Niche_Axis_2))
+  if(is.null(x_lims)) {
+    x_lims <- c(min(plot_df$Niche_Axis_1), max(plot_df$Niche_Axis_1))
+  }
+  if(is.null(y_lims)) {
+    y_lims <- c(min(plot_df$Niche_Axis_2), max(plot_df$Niche_Axis_2))
+  }
   
   x_range <- x_lims[2] - x_lims[1]
   y_range <- y_lims[2] - y_lims[1]
@@ -101,15 +105,24 @@ sim_animation <- function(sim_ob, file_name = NULL, view = FALSE, expand_factor 
   contour_df <- contour_df %>%
     mutate(K = z)
   
-  trail <- 500
-  Time <- unique(plot_df$Time)[1000]
+  interval <- cut_interval(Times, num_frames)
+  time_df <- data_frame(Times = Times, interval = interval) %>%
+    group_by(interval) %>%
+    summarise(Times = Times[1])
+  
+  if(include_phylogeny) {
+    
+  }
+  
+  trail <- 600
+  #Time <- unique(plot_df$Time)[1000]
   make_frame <- function(Time) {
     plot_dat <- plot_df[plot_df$Time == Time, ]
     prev_plot <- plot_df[plot_df$Time < Time & plot_df$Time > (Time - trail), ]
     pp <- ggplot(plot_dat, aes(Niche_Axis_1, Niche_Axis_2)) +
       ylim(y_lims) +
       xlim(x_lims) +
-      scale_size_area(limits = pop_lims)  
+      scale_size_area(limits = pop_lims, max_size = 4)  
     pp <- pp + geom_raster(aes(fill = K), alpha = 0.9, data = contour_df) + 
         geom_contour(aes(z = K), data = contour_df, colour = "grey20", bins = 12,
                      size = 0.2) +
@@ -117,38 +130,37 @@ sim_animation <- function(sim_ob, file_name = NULL, view = FALSE, expand_factor 
    
     
     pp <- pp +
-        geom_path(aes(group = Species), alpha = 0.25, size = 0.2, colour = "black", data = prev_plot) +
-        geom_point(aes(size = Population)) +
+        geom_path(aes(group = Species), alpha = 0.5, size = 0.2, colour = "black", data = prev_plot) +
+        geom_point(aes(size = Population), shape = 21, colour = "white", fill = "black") +
       coord_equal() +
         theme_void() +
         theme(legend.position = "none",
               panel.grid = element_blank()) 
     
-    outfil <- file.path("temp",
-                        sprintf("plot1_%02f.png", Time))
+    outfil <- file.path(temp_folder,
+                        sprintf("plot1_%02f.png", Time), fsep = "\\")
     ggsave(outfil, width = 4, height = 4)
+    outfil
   }  
   
   Times <- unique(plot_df$Time)
   max(Times)
-  num_frames <- 3000
+  
   #wid <- max(Times) / num_frames
-  interval <- cut_interval(Times, num_frames)
-  time_df <- data_frame(Times = Times, interval = interval) %>%
-    group_by(interval) %>%
-    summarise(Times = Times[1])
+  
   reduced_times <- time_df$Times
   frames <- pblapply(reduced_times, make_frame)
   
-  frame_files <- list.files("temp")
-  frame_nums <- sapply(strsplit(frame_files, "_", fixed = TRUE), function(x) x[2])
-  frame_nums <- as.numeric(frame_nums <- gsub(".png", "", frame_nums))
-  frame_files <- list.files("temp", full.names = TRUE)[order(frame_nums)]
+  # frame_files <- list.files("temp")
+  # frame_nums <- sapply(strsplit(frame_files, "_", fixed = TRUE), function(x) x[2])
+  # frame_nums <- as.numeric(frame_nums <- gsub(".png", "", frame_nums))
+  # frame_files <- list.files("temp", full.names = TRUE)[order(frame_nums)]
   
-  delay <- 20 / num_frames
+  delay <- 30 / num_frames
   
-  gifski::gifski(frame_files, width = 600, height = 600, delay = delay)
+  gifski::gifski(unlist(frames), gif_file = file_name, width = 600, height = 600, delay = delay)
   
+  return(file_name)
   anim <- ggplot(plot_df) + 
     #geom_contour(aes(z = K), data = contour_df, colour = "grey") +
     #geom_tile(aes(x = Niche_axis_1, y = Niche_axis_2, fill = K), data = contour_df) +

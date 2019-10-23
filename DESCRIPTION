@@ -6,5 +6,5 @@ Authors@R: person("Russell", "Dinnage", , "r.dinnage@gmail.com", c("aut", "cre")
 License: What license it uses
 Encoding: UTF-8
 LazyData: true
-Imports: cubature, deSolve, dplyr, nimble, progress, randtoolbox, readr, rgl, ggplot2, magick, pbapply, tidyr
+Imports: cubature, deSolve, dplyr, nimble, progress, randtoolbox, readr, rgl, ggplot2, magick, pbapply, tidyr, diffeqr, gganimate, ggtree, patchwork, scico
 RoxygenNote: 6.0.1

@@ -2,6 +2,10 @@ language: R
 cache: packages
 sudo: false
 warnings_are_errors: false
+
+before_install:
+  - export RGL_USE_NULL=TRUE
+
 addons:
   apt:
     update: true
@@ -19,3 +23,5 @@ addons:
       - r-cran-rgdal
       - libfftw3-dev
       - cargo
+      - libglu1-mesa-dev
+      

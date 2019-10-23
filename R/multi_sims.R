@@ -25,6 +25,7 @@ sim_radiation_multi <- function(parm_list, save_tree = TRUE, progress = TRUE, tr
   }
    if(!is.null(ncpus)) {
      cl <- makeCluster(ncpus)
+     clusterEvalQ(cl, {library(diffeqr); diffeq_setup()})
      clusterEvalQ(cl, library(nichefillr))
      clusterEvalQ(cl, library(readr))
      clusterExport(cl, c("save_folder", "save_tree", "trait_hist", "trait_hist_prop", "save_prefix", "compress", "run_sim"), envir=environment())

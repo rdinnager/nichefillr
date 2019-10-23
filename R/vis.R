@@ -70,8 +70,10 @@ make_df_from_sim <- function(sim_ob) {
 #' @import gganimate 
 #' @import tidyr 
 #' @import ggplot2
+#' @import ggtree
+#' @import patchwork
 #' @export sim_animation
-sim_animation <- function(sim_ob, temp_folder = tempdir(), file_name = NULL, x_lims = NULL, y_lims = NULL, view = FALSE, expand_factor = 0.1, contour_res = 25, height = 300, width = 400, res = 72, num_frames = 1000, include_phylogeny = FALSE) {
+sim_animation <- function(sim_ob, temp_folder = tempdir(), file_name = "animation.gif", x_lims = NULL, y_lims = NULL, view = FALSE, expand_factor = 0.1, contour_res = 25, height = 5, width = 4, res = 72, num_frames = 1000, include_phylogeny = FALSE, max_size = 6, trail = 1000, test_frame = NULL, end_col = 0.85, contour_col = "grey10") {
   message("Extracting trait history data from simulation (this might take awhile).... ")
   plot_df <- make_df_from_sim(sim_ob)
   
@@ -105,28 +107,51 @@ sim_animation <- function(sim_ob, temp_folder = tempdir(), file_name = NULL, x_l
   contour_df <- contour_df %>%
     mutate(K = z)
   
-  interval <- cut_interval(Times, num_frames)
-  time_df <- data_frame(Times = Times, interval = interval) %>%
-    group_by(interval) %>%
-    summarise(Times = Times[1])
+  wid <- (max(plot_df$Time) - min(plot_df$Time)) / num_frames
   
   if(include_phylogeny) {
+    trees <- sim_ob$sim_object$tree_list$as.list()
+    tree_times <- sim_ob$sim_object$tree_times$as.list()
+    tree_times <- unlist(tree_times)
+    tree_times_df <- data_frame(interval = cut_width(tree_times, wid), tree_num = seq_along(tree_times)) %>%
+      group_by(interval) %>%
+      summarise(tree_num = tree_num[1])
+    time_df <- data_frame(Times = Times, interval = interval) %>%
+      left_join(tree_times_df) %>%
+      fill(tree_num) %>%
+      group_by(interval) %>%
+      summarise(Times = Times[1], tree_num = tree_num[1]) %>%
+      arrange(Times)
+  } else {
+    Times <- unique(plot_df$Time)
+    interval <- cut_width(Times, wid)
+    time_df <- data_frame(Times = Times, interval = interval) %>%
+      group_by(interval) %>%
+      summarise(Times = Times[1]) %>%
+      arrange(Times)
     
   }
   
-  trail <- 600
-  #Time <- unique(plot_df$Time)[1000]
+  
+  
+  
+  
+  
+  
+  
+  
+  #Time <- reduced_times[100]
   make_frame <- function(Time) {
     plot_dat <- plot_df[plot_df$Time == Time, ]
     prev_plot <- plot_df[plot_df$Time < Time & plot_df$Time > (Time - trail), ]
     pp <- ggplot(plot_dat, aes(Niche_Axis_1, Niche_Axis_2)) +
       ylim(y_lims) +
       xlim(x_lims) +
-      scale_size_area(limits = pop_lims, max_size = 4)  
-    pp <- pp + geom_raster(aes(fill = K), alpha = 0.9, data = contour_df) + 
-        geom_contour(aes(z = K), data = contour_df, colour = "grey20", bins = 12,
+      scale_size_area(limits = pop_lims, max_size = max_size)  
+    pp <- pp + geom_raster(aes(fill = K), alpha = 1, data = contour_df) + 
+        geom_contour(aes(z = K), data = contour_df, colour = contour_col, bins = 12,
                      size = 0.2) +
-        scale_fill_scico(palette = "bilbao", end = 0.85)
+        scale_fill_scico(palette = "bilbao", end = end_col)
    
     
     pp <- pp +
@@ -137,18 +162,33 @@ sim_animation <- function(sim_ob, temp_folder = tempdir(), file_name = NULL, x_l
         theme(legend.position = "none",
               panel.grid = element_blank()) 
     
+    if(include_phylogeny) {
+      tree <- trees[[time_df$tree_num[time_df$Times == Time]]]
+    
+      tt <- ggtree(tree, size = 0.2)
+    
+      plot1 <- pp + tt + plot_layout(ncol = 1, heights = c(0.8, 0.2))
+    } else {
+      plot1 <- pp
+    }
+    
     outfil <- file.path(temp_folder,
                         sprintf("plot1_%02f.png", Time), fsep = "\\")
-    ggsave(outfil, width = 4, height = 4)
+    ggsave(outfil, plot1, width = width, height = height)
     outfil
   }  
   
-  Times <- unique(plot_df$Time)
+  reduced_times <- time_df$Times
+  
+  if(!is.null(test_frame)) {
+    return(make_frame(reduced_times[test_frame]))
+  }
+  
   max(Times)
   
   #wid <- max(Times) / num_frames
   
-  reduced_times <- time_df$Times
+  
   frames <- pblapply(reduced_times, make_frame)
   
   # frame_files <- list.files("temp")
@@ -158,7 +198,7 @@ sim_animation <- function(sim_ob, temp_folder = tempdir(), file_name = NULL, x_l
   
   delay <- 30 / num_frames
   
-  gifski::gifski(unlist(frames), gif_file = file_name, width = 600, height = 600, delay = delay)
+  gifski::gifski(unlist(frames), gif_file = file_name, width = width * 100, height = height * 100, delay = delay)
   
   return(file_name)
   anim <- ggplot(plot_df) + 

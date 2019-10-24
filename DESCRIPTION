@@ -21,10 +21,9 @@ Imports:
     tidyr,
     diffeqr,
     gganimate,
-    ggtree (>= 1.17.4),
+    ggtree,
     patchwork (>= 0.0.1),
     scico
 RoxygenNote: 6.0.1
 Remotes:  
-    thomasp85/patchwork,
-    YuLab-SMU/ggtree
+    thomasp85/patchwork

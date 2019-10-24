@@ -5,6 +5,7 @@ warnings_are_errors: false
 
 before_install:
   - export RGL_USE_NULL=TRUE
+  - Rscript -e "setRepositories(ind=1:2)"
 
 addons:
   apt:

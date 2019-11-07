@@ -8,10 +8,10 @@ will plot the trait values of the extant species, extinct species (optionally),
 and ancestors (optionally). Currently only work for 2 dimensional simulations, eventually
 will work with higher dimensions through t-sne dimension reduction.}
 \usage{
-\method{plot}{nichfillr_sim}(x, fitness_contour = TRUE, contour_res = 100,
-  expand_factor = 0.1, bins = 10, type = c("pollock", "trace"),
-  trace_alpha = 0.5, trace_size = 0.2, trace_colour = "black",
-  raster_alpha = 0.8)
+\method{plot}{nichfillr_sim}(x, fitness_contour = TRUE,
+  contour_res = 100, expand_factor = 0.1, bins = 10,
+  type = c("pollock", "trace"), trace_alpha = 0.5, trace_size = 0.2,
+  trace_colour = "black", raster_alpha = 0.8)
 }
 \description{
 Plot a \code{nichefillr_sim} object. If the simulation object contains a trait history,

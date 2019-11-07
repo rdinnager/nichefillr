@@ -4,10 +4,11 @@
 \alias{generate_landscape_old}
 \title{Generate Random Carrying Capacity Landscape}
 \usage{
-generate_landscape_old(u = 2, h_mean = 1, h_var = 0.5, bi_mean = c(0,
-  0), bi_var = c(3, 3), h0 = 1, sig0i = c(5, 5), P0i = c(1.5, 1.5),
-  sigi_mean = c(1, 1), sigi_var = c(1, 1), Pi_mean = c(1, 1),
-  Pi_var = c(0.25, 0.25), a = 0.5, Piz_min = 0.25, hz_min = 0.25)
+generate_landscape_old(u = 2, h_mean = 1, h_var = 0.5,
+  bi_mean = c(0, 0), bi_var = c(3, 3), h0 = 1, sig0i = c(5, 5),
+  P0i = c(1.5, 1.5), sigi_mean = c(1, 1), sigi_var = c(1, 1),
+  Pi_mean = c(1, 1), Pi_var = c(0.25, 0.25), a = 0.5,
+  Piz_min = 0.25, hz_min = 0.25)
 }
 \arguments{
 \item{u}{Number of carrying capacity peaks to generate}

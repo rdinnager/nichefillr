@@ -7,9 +7,9 @@
 generate_random_params_QMC(reps = 10000, potent_vol_range = c(1, 20),
   total_vol_range = c(5, 5), num_peaks_range = c(2L, 10L),
   P_min_range = c(0.9, 0.9), P_max_range = c(1.1, 1.1),
-  prop_variance_range = c(0.1, 0.5), d_range = c(2L, 2L), P_range = c(1,
-  1), e_var_range = c(0.1, 0.4), gamma_range = c(0.01, 1),
-  b_rate_range = c(0.001, 0.003), D_range = c(1, 1),
+  prop_variance_range = c(0.1, 0.5), d_range = c(2L, 2L),
+  P_range = c(1, 1), e_var_range = c(0.1, 0.4), gamma_range = c(0.01,
+  1), b_rate_range = c(0.001, 0.003), D_range = c(1, 1),
   h_to_sig_ratio_range = c(0.5, 2), a_prop_range = c(0.05, 0.05),
   tot_time_range = c(50000, 50000), V_range = c(0.01, 0.01),
   mult_range = c(1, 1), C_range = c(1, 1), c_var_range = c(0.1, 0.1))

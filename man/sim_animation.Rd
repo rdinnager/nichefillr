@@ -6,11 +6,12 @@
 done in two dimensions. Will eventually support higher dimensions using t-sne dimension
 reduction.}
 \usage{
-sim_animation(sim_ob, temp_folder = tempdir(), file_name = "animation.gif",
-  x_lims = NULL, y_lims = NULL, view = FALSE, expand_factor = 0.1,
-  contour_res = 25, height = 5, width = 4, res = 72,
-  num_frames = 1000, include_phylogeny = FALSE, max_size = 6,
-  trail = 1000, test_frame = NULL)
+sim_animation(sim_ob, temp_folder = tempdir(),
+  file_name = "animation.gif", x_lims = NULL, y_lims = NULL,
+  view = FALSE, expand_factor = 0.1, contour_res = 25, height = 5,
+  width = 4, res = 72, num_frames = 1000,
+  include_phylogeny = FALSE, max_size = 6, trail = 1000,
+  test_frame = NULL, end_col = 0.85, contour_col = "grey10")
 }
 \arguments{
 \item{sim_ob}{nichefillr_sim object containing the results of a simulation.}

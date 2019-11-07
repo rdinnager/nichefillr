@@ -4,8 +4,8 @@
 \alias{make_tree_ob}
 \title{Initialize Tree Object for Macroevolution Simulation}
 \usage{
-make_tree_ob(b_rate = 0.001, init_traits, e_var, init_Ns, trait_hist = TRUE,
-  save_tree = TRUE)
+make_tree_ob(b_rate = 0.001, init_traits, e_var, init_Ns,
+  trait_hist = TRUE, save_tree = TRUE)
 }
 \arguments{
 \item{b_rate}{Pure birth rate for new species, here just to get first branching;}

@@ -1,7 +1,7 @@
 #' Function to generate example parameter objects.
 #' @param name Name of example parameter set. See details for list of available options (not done yet).
 #' @return A list containing a set of simulation parameters.
-#' @export example_parms
+#' @export
 example_parms <- function(name = c("simple_peaks_2", "blackhole_comp")) {
   params <- switch(name, 
                    list(simple_peaks_2 =
@@ -37,6 +37,8 @@ example_parms <- function(name = c("simple_peaks_2", "blackhole_comp")) {
   if(length(name) == 1) {
     params <- params[[1]]
   }
+  
+  params
 }
 
 

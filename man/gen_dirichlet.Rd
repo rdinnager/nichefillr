@@ -4,7 +4,8 @@
 \alias{gen_dirichlet}
 \title{Generate Dirichlet Distribution Parameters for Peaks}
 \usage{
-gen_dirichlet(prop_variance = c(0.1, 0.3, 0.5), num_peaks = c(2, 6, 10))
+gen_dirichlet(prop_variance = c(0.1, 0.3, 0.5), num_peaks = c(2, 6,
+  10))
 }
 \description{
 Function to generate the alpha parameters for a dirichlet distribution, which
